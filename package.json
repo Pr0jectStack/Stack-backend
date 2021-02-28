@@ -1,0 +1,19 @@
+{
+  "name": "stack-backend",
+  "version": "1.0.0",
+  "description": "Backend for Stack",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pr0jectStack/Stack-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pr0jectStack/Stack-backend/issues"
+  },
+  "homepage": "https://github.com/Pr0jectStack/Stack-backend#readme"
+}
