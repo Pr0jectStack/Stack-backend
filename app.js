@@ -3,9 +3,12 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const authRoute = require("./routes/authRoutes");
 const dotenv = require("dotenv");
 const session = require("express-session");
 const connectDB = require("./config/connect_db");
+const cookieParser = require("cookie-parser");
+// const session = require("express-session");
 const { default: MongoStore } = require("connect-mongo");
 
 // Init Express
@@ -26,10 +29,15 @@ app.use(
 );
 
 app.use(cors());
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 // Connect Database
 connectDB();
+
+
+app.use("/", authRoute);
+app.use("/auth", authRoute);
 
 const PORT = process.env.PORT || 5000;
 
