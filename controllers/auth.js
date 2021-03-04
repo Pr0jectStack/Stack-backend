@@ -13,9 +13,9 @@ exports.signin = (req, res) => {
     });
   }
 
-  const { username_email, password, username } = req.body;
+  const { username_email, password, userName } = req.body;
 
-  if (!username) {
+  if (userName == "0") {
     let email = username_email;
     User.findOne({ email }, (err, user) => {
       if (err || !user) {
@@ -46,8 +46,7 @@ exports.signin = (req, res) => {
         user: user,
       });
     });
-  }
-  else{
+  } else {
     let username = username_email;
     User.findOne({ username }, (err, user) => {
       if (err || !user) {
@@ -56,7 +55,7 @@ exports.signin = (req, res) => {
 
       if (!user.authenticate(password)) {
         return res.status(400).json({
-          error: "User email and password do not match!",
+          error: "Username and password do not match!",
         });
       }
 
