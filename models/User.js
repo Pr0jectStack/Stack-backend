@@ -48,6 +48,7 @@ const User = new Schema(
       trim: true,
     },
     contribution: [{ type: ObjectId }],
+    socialMediaHandle: [{ type: ObjectId }],
     teams: [{ type: ObjectId }],
     skypeId: {
       type: String,
