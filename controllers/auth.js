@@ -15,7 +15,7 @@ exports.signin = (req, res) => {
 
   const { username_email, password, userName } = req.body;
 
-  if (userName == "0") {
+  if (userName === "0") {
     let email = username_email;
     User.findOne({ email }, (err, user) => {
       if (err || !user) {
