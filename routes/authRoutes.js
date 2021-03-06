@@ -7,7 +7,8 @@ const { check } = require("express-validator");
 const {
   signup,
   signin,
-  signout
+  signout,
+  usernameAvailability
 } = require("../controllers/auth");
 
 
@@ -42,5 +43,7 @@ router.post(
 );
 
 router.get("/signOut", signout);
+
+router.post("/checkUserNameAvailability",usernameAvailability);
 
 module.exports = router;

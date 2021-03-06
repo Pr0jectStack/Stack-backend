@@ -13,42 +13,18 @@ exports.signin = (req, res) => {
     });
   }
 
-  const { username_email, password, userName } = req.body;
-
-  if (userName === "0") {
-    let email = username_email;
-    User.findOne({ email }, (err, user) => {
-      if (err || !user) {
-        return res.status(400).json({ error: "User not found!" });
-      }
-
-      if (!user.authenticate(password)) {
-        return res.status(400).json({
-          error: "User email and password do not match!",
-        });
-      }
-
-      // Create Token
-      const token = jwt.sign({ _id: user._id }, process.env.SECRET);
-
-      //Put token in cookie
-      res.cookie("token", token, { expire: new Date() + 30 });
-
-      const profile = user;
-      profile.salt = null;
-      profile.encrypted_password = null;
-      profile.updatedAt = null;
-
-      //Send response to Front End
-      return res.status(200).json({
-        message: "User signed in successfully!",
-        token: token,
-        user: user,
-      });
-    });
-  } else {
+  const { username_email, password } = req.body;
     let username = username_email;
-    User.findOne({ username }, (err, user) => {
+    User.findOne({
+      $or:[
+        {
+          email:username
+        },
+        {
+          username:username
+        }
+      ]
+    }, (err, user) => {
       if (err || !user) {
         return res.status(400).json({ error: "User not found!" });
       }
@@ -77,7 +53,6 @@ exports.signin = (req, res) => {
         user: user,
       });
     });
-  }
 };
 
 exports.signout = (req, res) => {
@@ -162,3 +137,35 @@ exports.signup = (req, res) => {
     //     });
   });
 };
+
+exports.usernameAvailability = (req,res)=>{
+  const username =req.body.username;
+  console.log(username);
+  User.findOne({
+    $or:[
+      {
+        email:username
+      },
+      {
+        username:username
+      }
+    ]
+  },(err,user)=>{
+    if(err){
+      return res.status(400).json({
+        error:"Unexpected Error!"
+      })
+    }
+    if(!user){
+      return res.status(200).json({
+        message:"Username or Email Available"
+      })
+    }
+    else{
+      return res.status(200).json({
+        error:"Username or email already taken"
+      })
+    }
+  })
+  
+}
