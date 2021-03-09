@@ -13,8 +13,12 @@ const Workspace = new Schema({
     ref: "User",
     required: true,
   },
+  description:{
+    type:String,
+    default:""
+  },
   teams: [{ type: ObjectId, ref: "Team" }],
   members: [{ type: ObjectId, ref: "User" }],
 });
 
-module.exports = mongoose.models.User || mongoose.model("Workspace", Workspace);
+module.exports = mongoose.models.Workspace || mongoose.model("Workspace", Workspace);
