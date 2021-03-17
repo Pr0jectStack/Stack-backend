@@ -49,8 +49,8 @@ const User = new Schema(
     },
     contribution: [{ type: ObjectId }],
     socialMediaHandles: [{ type: ObjectId }],
-    workspaces:[{type:ObjectId, ref:"Workspace"}],
-    teams: [{ type: ObjectId, red:"Team" }],
+    workspaces: [{ type: ObjectId, ref: "Workspace" }],
+    teams: [{ type: ObjectId, ref: "Team" }],
     skypeId: {
       type: String,
       default: "",
