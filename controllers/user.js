@@ -4,7 +4,7 @@ exports.getUserById = (req, res) => {
   const userId = req.query.userId;
   User.findById(userId)
     .lean()
-    .populate("teams")
+    .populate("workspaces")
     .exec((err, user) => {
       if (err) {
         return res
