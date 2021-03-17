@@ -14,17 +14,10 @@ exports.signin = (req, res) => {
   }
 
   const { username_email, password } = req.body;
-    let username = username_email;
-    User.findOne({
-      $or:[
-        {
-          email:username
-        },
-        {
-          username:username
-        }
-      ]
-    })
+  let username = username_email;
+  User.findOne({
+    $or: [{ email: username }, { username: username }],
+  })
     .populate("workspaces")
     .exec((err, user) => {
       if (err || !user) {
@@ -140,34 +133,35 @@ exports.signup = (req, res) => {
   });
 };
 
-exports.usernameAvailability = (req,res)=>{
-  const username =req.body.username;
+exports.usernameAvailability = (req, res) => {
+  const username = req.body.username;
   console.log(username);
-  User.findOne({
-    $or:[
-      {
-        email:username
-      },
-      {
-        username:username
+  User.findOne(
+    {
+      $or: [
+        {
+          email: username,
+        },
+        {
+          username: username,
+        },
+      ],
+    },
+    (err, user) => {
+      if (err) {
+        return res.status(400).json({
+          error: "Unexpected Error!",
+        });
       }
-    ]
-  },(err,user)=>{
-    if(err){
-      return res.status(400).json({
-        error:"Unexpected Error!"
-      })
+      if (!user) {
+        return res.status(200).json({
+          message: "Username or Email Available",
+        });
+      } else {
+        return res.status(200).json({
+          error: "Username or email already taken",
+        });
+      }
     }
-    if(!user){
-      return res.status(200).json({
-        message:"Username or Email Available"
-      })
-    }
-    else{
-      return res.status(200).json({
-        error:"Username or email already taken"
-      })
-    }
-  })
-  
-}
+  );
+};

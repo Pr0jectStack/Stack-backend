@@ -48,7 +48,12 @@ const User = new Schema(
       trim: true,
     },
     contribution: [{ type: ObjectId }],
-    socialMediaHandles: [{ type: ObjectId }],
+    socialMediaHandles: {
+      github: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      website: { type: String, default: "" },
+    },
     workspaces: [{ type: ObjectId, ref: "Workspace" }],
     teams: [{ type: ObjectId, ref: "Team" }],
     skypeId: {
