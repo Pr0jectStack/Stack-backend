@@ -48,6 +48,7 @@ exports.createWorkspace = (req, res) => {
                 } else {
                   return res.status(200).json({
                     message: "Workspace created successfully",
+                    newWorkspace:workspace
                   });
                 }
               });
