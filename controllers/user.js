@@ -23,21 +23,21 @@ exports.updateUserProfile = (req, res) => {
   const userId = req.query.userId;
   const { bio, socialMediaHandles } = req.body;
 
-  User.findByIdAndUpdate(
-    userId,
-    { bio, socialMediaHandles },
-    { new: true },
-    function (err, docs) {
+  User.findByIdAndUpdate(userId, { bio, socialMediaHandles }, { new: true })
+    .populate("workspaces")
+    .exec((err, data) => {
       if (err) {
         return res.status(400).json({
           error: "Some error occured! Cannot update profile at this time!",
         });
       } else {
-        delete docs.encrypted_password;
-        delete docs.salt;
-        delete docs.updatedAt;
-        return res.status(200).json({ data: docs });
+        delete data.encrypted_password;
+        delete data.salt;
+        delete data.updatedAt;
+        data.encrypted_password = null;
+        data.salt = null;
+        data.updatedAt = null;
+        return res.status(200).json({ data: data });
       }
-    }
-  );
+    });
 };
