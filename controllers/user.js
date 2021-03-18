@@ -21,14 +21,23 @@ exports.getUserById = (req, res) => {
 
 exports.updateUserProfile = (req, res) => {
   const userId = req.query.userId;
-  const userData = req.body.data;
-  User.findByIdAndUpdate(userId, { ...userData }, function (err, docs) {
-    if (err) {
-      return res.status(400).json({
-        error: "Some error occured! Cannot update profile at this time!",
-      });
-    } else {
-      return res.status(200).json({ message: "Profile updated successfully!" });
+  const { bio, socialMediaHandles } = req.body;
+
+  User.findByIdAndUpdate(
+    userId,
+    { bio, socialMediaHandles },
+    { new: true },
+    function (err, docs) {
+      if (err) {
+        return res.status(400).json({
+          error: "Some error occured! Cannot update profile at this time!",
+        });
+      } else {
+        delete docs.encrypted_password;
+        delete docs.salt;
+        delete docs.updatedAt;
+        return res.status(200).json({ data: docs });
+      }
     }
-  });
+  );
 };
