@@ -31,9 +31,6 @@ exports.updateUserProfile = (req, res) => {
           error: "Some error occured! Cannot update profile at this time!",
         });
       } else {
-        delete data.encrypted_password;
-        delete data.salt;
-        delete data.updatedAt;
         data.encrypted_password = null;
         data.salt = null;
         data.updatedAt = null;
