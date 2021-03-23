@@ -100,3 +100,23 @@ exports.deleteWorkspace = (req, res) => {
     }
   });
 };
+
+exports.getWorkspaceById = (req,res) =>{
+  const wid =req.body.wid;
+  Workspace.findOne({_id:wid})
+  .populate("teams")
+  .populate("members","firstname username email skypeId")
+  .exec((err,workspace)=>{
+    if(err || !workspace){
+        return res.status(400).json({
+          error:"Workspace not found",
+          id:wid
+        })
+    }
+    else{
+        return res.status(200).json({
+          workspace:workspace
+        })
+    }
+  })
+}
