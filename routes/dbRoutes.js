@@ -3,6 +3,7 @@ const {
   getUserById,
   updateUserProfile,
   updateUserPassword,
+  updateUserImage,
 } = require("../controllers/user");
 const {
   createWorkspace,
@@ -15,6 +16,7 @@ router.get("/getUserById", getUserById);
 
 router.put("/updateUserProfile", updateUserProfile);
 router.put("/updateUserPassword", updateUserPassword);
+router.put("/updateUserImage", updateUserImage);
 
 router.post("/createWorkspace", createWorkspace);
 router.post("/createTeam", createTeam);
