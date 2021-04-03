@@ -101,22 +101,78 @@ exports.deleteWorkspace = (req, res) => {
   });
 };
 
-exports.getWorkspaceById = (req,res) =>{
-  const wid =req.body.wid;
-  Workspace.findOne({_id:wid})
-  .populate("teams")
-  .populate("members","firstname username email skypeId")
-  .exec((err,workspace)=>{
-    if(err || !workspace){
+exports.getWorkspaceById = (req, res) => {
+  const wid = req.body.wid;
+  Workspace.findOne({ _id: wid })
+    .populate("teams")
+    .populate("members", "firstname username email skypeId")
+    .exec((err, workspace) => {
+      if (err || !workspace) {
         return res.status(400).json({
-          error:"Workspace not found",
-          id:wid
-        })
-    }
-    else{
+          error: "Workspace not found",
+          id: wid,
+        });
+      } else {
         return res.status(200).json({
-          workspace:workspace
-        })
+          workspace: workspace,
+        });
+      }
+    });
+};
+
+exports.addMembersToWorkspace = (req, res) => {
+  /**
+   * TODO: Check if isAuthenticated to add member [must be a owner]
+   */
+
+  const { wid, members, userId } = req.body;
+
+  Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
+    if (err || !workspace) {
+      return res.status(400).json({
+        error: "Workspace not found",
+      });
+    } else if (workspace.owner != userId) {
+      return res.status(401).json({
+        owner: workspace.owner,
+        user: userId,
+        error: "Unauthorized",
+      });
+    } else {
+      let newMembers = workspace.members;
+
+      /** First complete this */
+      members.forEach(function (member) {
+        User.findOne({
+          $or: [{ email: member }, { username: member }],
+        }).exec((err, user) => {
+          if (user) {
+            if (!workspace.members.includes(user._id)) {
+              user.workspaces.push(workspace._id);
+              user.save((err, user) => {
+                if (user) {
+                  newMembers.push(user._id);
+                }
+              });
+            }
+          }
+        });
+      });
+
+      //TODO: Look for better options to make code synchronous
+      await new Promise((r) => setTimeout(r, 2000));
+
+      /** Run after running above loop */
+      workspace.members = newMembers;
+      workspace.save((err, workspace) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        } else {
+          return res
+            .status(200)
+            .json({ workspace: workspace, message: "Successfully Added!" });
+        }
+      });
     }
-  })
-}
+  });
+};
