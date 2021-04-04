@@ -8,9 +8,9 @@ const {
 const {
   createWorkspace,
   getWorkspaceById,
-  addMembersToWorkspace
+  addMembersToWorkspace,
 } = require("../controllers/workspace");
-const { createTeam } = require("../controllers/team");
+const { createTeam, addMembersToTeam } = require("../controllers/team");
 const router = express.Router();
 
 router.get("/getUserById", getUserById);
@@ -24,6 +24,7 @@ router.post("/createTeam", createTeam);
 
 router.post("/getWorkspaceById", getWorkspaceById);
 
-router.post("/addMembersToWorkspace",addMembersToWorkspace);
+router.post("/addMembersToWorkspace", addMembersToWorkspace);
+router.post("/addMembersToTeam", addMembersToTeam);
 
 module.exports = router;

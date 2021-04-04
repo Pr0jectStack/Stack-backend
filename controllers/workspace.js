@@ -134,8 +134,6 @@ exports.addMembersToWorkspace = (req, res) => {
       });
     } else if (workspace.owner != userId) {
       return res.status(401).json({
-        owner: workspace.owner,
-        user: userId,
         error: "Unauthorized",
       });
     } else {
