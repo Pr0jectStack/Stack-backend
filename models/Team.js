@@ -14,10 +14,12 @@ const Team = new Schema({
     type: ObjectId,
     ref: "User",
     required: true,
+    trim: true,
   },
   teamLeader: {
     type: ObjectId,
     ref: "User",
+    trim: true,
   },
   members: [{ type: ObjectId, ref: "User" }],
   inviteLink: {
