@@ -10,7 +10,7 @@ const {
   getWorkspaceById,
   addMembersToWorkspace,
 } = require("../controllers/workspace");
-const { createTeam } = require("../controllers/team");
+const { createTeam, addMembersToTeam } = require("../controllers/team");
 const {
   addTask,
   moveTask,
@@ -32,6 +32,7 @@ router.post("/getWorkspaceById", getWorkspaceById);
 router.post("/addMembersToWorkspace", addMembersToWorkspace);
 
 router.post("/createTeam", createTeam);
+router.post("/addMembersToTeam", addMembersToTeam);
 
 router.post("/addTask", addTask);
 router.put("/moveTask", moveTask);
