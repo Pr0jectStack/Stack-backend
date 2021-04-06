@@ -5,14 +5,18 @@ const { ObjectId } = Schema;
 // TODO: Should we just use MongoDB enums here?
 
 const Task = new Schema({
-  taskDescription: {
+  taskName: {
     type: String,
     trim: true,
     required: true,
   },
+  taskDescription: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   deadline: {
     type: Date,
-    required: true,
   },
   category: {
     type: String,

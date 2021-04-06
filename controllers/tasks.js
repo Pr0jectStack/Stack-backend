@@ -1,18 +1,280 @@
 const Team = require("../models/Team");
-const User = require("../models/User");
 const Task = require("../models/Task");
 
-exports.deleteTask = (req, res) => {
-  const taskId = req.body.teamId;
+/**
+ * Add new task inside a team.
+ * @param {object} req - Object containing tasks, teamId and the userId
+ * @param {JSON} res - Failure/Success message
+ */
+exports.addTask = (req, res) => {
+  const {
+    tid,
+    userId,
+    taskName,
+    taskDescription,
+    deadline,
+    category,
+    priority,
+    status,
+    membersAssigned,
+    assignedBy,
+  } = req.body;
 
-  Task.findOneAndDelete({ _id: taskId }, (err, task) => {
-    if (err) {
+  const task = new Task({
+    taskName,
+    taskDescription,
+    deadline,
+    category,
+    priority,
+    status,
+    membersAssigned,
+    assignedBy,
+  });
+
+  Team.findById({ _id: tid }).exec((err, team) => {
+    if (err || !team) {
       return res.status(400).json({
-        error: "Unexpected error",
+        error: "Team not found!",
+      });
+    } else if (team.owner != userId && team.teamLeader != userId) {
+      return res.status(401).json({
+        error: "Unauthorized request.",
       });
     } else {
-      return res.status(200).json({
-        message: "Task deleted successfully",
+      task.save((err, newTask) => {
+        if (err) {
+          return res.status(400).json({ error: "Cannot create task" });
+        } else {
+          // Add newly created task to teams.
+          team.tasks.push(newTask._id);
+
+          team.save((err, updatedTeam) => {
+            if (err) {
+              // Remove newly created task.
+              Task.findByIdAndDelete(newTask._id).exec((err, deletedTask) => {
+                if (err) {
+                  // console.log(err);
+                } else {
+                  // console.log("SUCCESS");
+                }
+              });
+              return res.status(400).json({ error: "Cannot create task." });
+            } else {
+              return res.status(200).json({
+                team: updatedTeam,
+                task: newTask,
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+};
+
+/**
+ * Edit Task fields - taskName, taskDescription, deadline, category, priority, status.
+ * @param {object} req - Task model, task Id
+ * @param {JSON} res - Success/Failure indication
+ */
+exports.editTask = (req, res) => {
+  const {
+    taskId,
+    taskName,
+    taskDescription,
+    deadline,
+    category,
+    priority,
+    status,
+  } = req.body;
+
+  let editTaskFields = {};
+  if (taskName) {
+    editTaskFields = {
+      ...editTaskFields,
+      taskName,
+    };
+  }
+  if (taskDescription) {
+    editTaskFields = {
+      ...editTaskFields,
+      taskDescription,
+    };
+  }
+  if (deadline) {
+    editTaskFields = {
+      ...editTaskFields,
+      deadline,
+    };
+  }
+  if (priority) {
+    editTaskFields = {
+      ...editTaskFields,
+      priority,
+    };
+  }
+  if (category) {
+    editTaskFields = {
+      ...editTaskFields,
+      category,
+    };
+  }
+  if (status) {
+    editTaskFields = {
+      ...editTaskFields,
+      status,
+    };
+  }
+
+  // Update the task in the database.
+  Task.findByIdAndUpdate(taskId, { ...editTaskFields }, { new: true }).exec(
+    (err, newTask) => {
+      if (err) {
+        return res.status(400).json({ error: "Cannot update task right now." });
+      } else {
+        return res.status(200).json({ task: newTask });
+      }
+    }
+  );
+};
+
+/**
+ * Move task from source column to destination column.
+ * @param {object} req - TaskId, and destination column
+ * @param {JSON} res - Success/Failure message
+ */
+exports.moveTask = (req, res) => {
+  const { taskId, destination } = req.body;
+  let status = destination;
+  Task.findByIdAndUpdate(taskId, { status }, { new: true }).exec(
+    (err, newTask) => {
+      if (err) {
+        return res.status(400).json({ error: "Cannot move task right now!" });
+      } else {
+        return res.status(200).json({ task: newTask });
+      }
+    }
+  );
+};
+
+/**
+ * Assign new members to task.
+ * @param {object} req - taskId, tid, userId, members
+ * @param {JSON} res - Sucess/Failure indication
+ */
+exports.assignMembersToTask = (req, res) => {
+  const { taskId, tid, userId, members } = req.body;
+
+  Team.findById(tid).exec((err, team) => {
+    if (err || !team) {
+      return res.status(400).json({
+        error: "Team not found!",
+      });
+    } else if (team.owner != userId && team.teamLeader != userId) {
+      return res.status(401).json({
+        error: "Unauthorized request.",
+      });
+    } else {
+      Task.findByIdAndUpdate(
+        taskId,
+        {
+          $addToSet: { membersAssigned: { $each: members } },
+        },
+        { new: true }
+      ).exec((err, updatedTask) => {
+        if (err) {
+          return res
+            .status(400)
+            .json({ error: "Cannot assign members to task right now" });
+        } else {
+          return res.status(200).json({ task: updatedTask });
+        }
+      });
+    }
+  });
+};
+
+/**
+ * Remove members from task.
+ * @param {object} req - taskId, tid, userId, members
+ * @param {JSON} res - Sucess/Failure indication
+ */
+exports.removeMembersFromTask = (req, res) => {
+  const { taskId, tid, userId, members } = req.body;
+
+  Team.findById(tid).exec((err, team) => {
+    if (err || !team) {
+      return res.status(400).json({
+        error: "Team not found!",
+      });
+    } else if (team.owner != userId && team.teamLeader != userId) {
+      return res.status(401).json({
+        error: "Unauthorized request.",
+      });
+    } else {
+      Task.findById(taskId).exec((err, task) => {
+        if (err) {
+          return res
+            .status(400)
+            .json({ error: "Cannot remove members from task right now" });
+        } else {
+          // Filter out the members.
+          let newMembers = task.membersAssigned.filter(
+            (member) => !members.includes(member.toString())
+          );
+          task.membersAssigned = newMembers;
+
+          task.save((err, updatedTask) => {
+            if (err) {
+              return res.status(400).json({
+                error: "Cannot remove membersd frrom task right now",
+              });
+            } else {
+              return res.status(200).json({ task: updatedTask });
+            }
+          });
+        }
+      });
+    }
+  });
+};
+
+/**
+ * Delete task.
+ * @param {object} req - taskId, tid, userId
+ * @param {JSON} res - Success/Failure indication
+ */
+exports.deleteTask = (req, res) => {
+  const { taskId, tid, userId } = req.body;
+
+  Team.findById(tid).exec((err, team) => {
+    if (err || !team) {
+      return res.status(400).json({
+        error: "Team not found!",
+      });
+    } else if (team.owner != userId && team.teamLeader != userId) {
+      return res.status(401).json({
+        error: "Unauthorized request.",
+      });
+    } else {
+      // Remove task from tteam
+      let tasks = team.tasks.filter((task) => task != taskId);
+      team.tasks = tasks;
+      team.save((err, updatedTeam) => {
+        if (err) {
+          return res
+            .status(400)
+            .json({ error: "Cannot remove tasks from team right now" });
+        } else {
+          Task.findByIdAndDelete(taskId).exec((err, deletedTask) => {
+            if (err) {
+              // console.log(err);
+            } else {
+              // console.log("SUCCESS");
+            }
+          });
+          return res.status(200).json({ team: updatedTeam });
+        }
       });
     }
   });
