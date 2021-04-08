@@ -85,6 +85,30 @@ exports.createTeam = (req, res) => {
   });
 };
 
+exports.getTeamById = (req, res) => {
+  const tid = req.query.tid;
+  Team.findOne({ _id: tid })
+    .populate("tasks")
+    .populate({
+      path: "tasks",
+      populate: {
+        path: "membersAssigned",
+      },
+    })
+    .exec((err, team) => {
+      if (err || !team) {
+        return res.status(400).json({
+          error: "Team not found",
+          id: tid,
+        });
+      } else {
+        return res.status(200).json({
+          team: team,
+        });
+      }
+    });
+};
+
 exports.deleteTeam = (req, res) => {
   const teamId = req.body.teamId;
 
@@ -126,7 +150,7 @@ exports.deleteTeam = (req, res) => {
 
 exports.addMembersToTeam = (req, res) => {
   const { wid, tid, members, userId } = req.body;
-  
+
   Workspace.findById({ _id: wid }).exec((err, workspace) => {
     if (err || !workspace) {
       return res.status(400).json({
