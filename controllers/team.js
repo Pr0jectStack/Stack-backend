@@ -95,6 +95,7 @@ exports.getTeamById = (req, res) => {
         path: "membersAssigned",
       },
     })
+    .populate("members", "firstname username email skypeId")
     .exec((err, team) => {
       if (err || !team) {
         return res.status(400).json({
