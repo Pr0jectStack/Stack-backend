@@ -2,6 +2,7 @@
 
 const Team = require("../models/Team");
 const Task = require("../models/Task");
+const User = require("../models/User");
 
 /**
  * Add new task inside a team.
@@ -33,7 +34,7 @@ exports.addTask = (req, res) => {
     assignedBy,
   });
 
-  Team.findById({ _id: tid }).exec((err, team) => {
+  Team.findById({ _id: tid }).exec(async (err, team) => {
     if (err || !team) {
       return res.status(400).json({
         error: "Team not found!",
@@ -51,6 +52,25 @@ exports.addTask = (req, res) => {
         error: "Unauthorized request.",
       });
     } else {
+      let newMembersAssigned = [];
+
+      membersAssigned.forEach((member) => {
+        User.findOne({
+          $or: [{ email: member }, { username: member }],
+        }).exec((err, user) => {
+          if (user) {
+            if (team.members.includes(user._id)) {
+              newMembersAssigned.push(user._id);
+            }
+          }
+        });
+      });
+
+      // ! TODO: Look for better options to make code synchronous
+      await new Promise((r) => setTimeout(r, 2000));
+
+      task.membersAssigned = newMembersAssigned;
+
       task.save((err, newTask) => {
         if (err) {
           return res.status(400).json({ error: "Cannot create task" });
@@ -236,20 +256,49 @@ exports.moveTask = (req, res) => {
 exports.assignMembersToTask = (req, res) => {
   const { taskId, tid, userId, members } = req.body;
 
-  Team.findById(tid).exec((err, team) => {
+  Team.findById(tid).exec(async (err, team) => {
     if (err || !team) {
       return res.status(400).json({
         error: "Team not found!",
       });
-    } else if (team.owner != userId && team.teamLeader != userId) {
+    } else if (!userId) {
+      return res.status(401).json({
+        error: "Unauthorized request.",
+      });
+    } else if (
+      userId &&
+      team.owner.toString() !== userId.toString() &&
+      team.teamLeader.toString() !== userId.toString()
+    ) {
       return res.status(401).json({
         error: "Unauthorized request.",
       });
     } else {
+      let newMembersAssigned = [];
+
+      members.forEach((member) => {
+        User.findOne({
+          $or: [{ email: member }, { username: member }],
+        }).exec((err, user) => {
+          if (user) {
+            if (team.members.includes(user._id)) {
+              newMembersAssigned.push(user._id);
+            }
+          }
+        });
+      });
+
+      // ! TODO: Look for better options to make code synchronous
+      await new Promise((r) => setTimeout(r, 2000));
+
+      if (newMembersAssigned.length <= 0) {
+        return res.status(400).json({ error: "Cannot add any team member." });
+      }
+
       Task.findByIdAndUpdate(
         taskId,
         {
-          $addToSet: { membersAssigned: { $each: members } },
+          $addToSet: { membersAssigned: { $each: newMembersAssigned } },
         },
         { new: true }
       ).exec((err, updatedTask) => {
@@ -258,7 +307,20 @@ exports.assignMembersToTask = (req, res) => {
             .status(400)
             .json({ error: "Cannot assign members to task right now" });
         } else {
-          return res.status(200).json({ task: updatedTask });
+          Team.findById(tid)
+            .populate("tasks")
+            .populate({
+              path: "tasks",
+              populate: {
+                path: "membersAssigned",
+              },
+            })
+            .exec((err, team) => {
+              if (err) {
+                // console.log(err);
+              }
+              return res.status(200).json({ team: team, tasks: team.tasks });
+            });
         }
       });
     }
