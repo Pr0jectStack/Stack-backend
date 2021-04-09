@@ -40,18 +40,11 @@ exports.signin = (req, res) => {
 
   const { username_email, password } = req.body;
   let username = username_email;
-  User.findOne(
-    {
-      $or: [
-        {
-          email: username,
-        },
-        {
-          username: username,
-        },
-      ],
-    },
-    (err, user) => {
+  User.findOne({
+    $or: [{ email: username }, { username: username }],
+  })
+    .populate("workspaces")
+    .exec((err, user) => {
       if (err || !user) {
         return res.status(400).json({ error: "User not found!" });
       }

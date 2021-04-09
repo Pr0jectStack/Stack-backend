@@ -2,7 +2,6 @@
 
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes");
 const dbRoutes = require("./routes/dbRoutes");
 const dotenv = require("dotenv");
@@ -31,7 +30,8 @@ app.use(
 
 app.use(cors());
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Connect Database
 connectDB();
