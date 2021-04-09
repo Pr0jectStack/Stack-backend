@@ -8,7 +8,8 @@ const {
   signup,
   signin,
   signout,
-  usernameAvailability
+  usernameAvailability,
+  verifyEmail
 } = require("../controllers/auth");
 
 
@@ -45,5 +46,8 @@ router.post(
 router.get("/signOut", signout);
 
 router.post("/checkUserNameAvailability",usernameAvailability);
+
+
+router.get("/email-verify", verifyEmail);
 
 module.exports = router;

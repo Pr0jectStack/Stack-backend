@@ -2,6 +2,7 @@ const User = require("../models/User");
 const { validationResult } = require("express-validator");
 var jwt = require("jsonwebtoken");
 var expressJwt = require("express-jwt");
+const sgMail = require("@sendgrid/mail");
 const secret = process.env.SECRET;
 
 const replaceDot = (token) => {
@@ -169,7 +170,7 @@ exports.signup = (req, res) => {
 
 exports.usernameAvailability = (req, res) => {
   const username = req.body.username;
-  console.log(username);
+  // console.log(username);
   User.findOne(
     {
       $or: [
@@ -222,7 +223,9 @@ exports.verifyEmail = (req, res) => {
       //     " " +
       //     firstName +
       //     " " +
-      //     lastName
+      //     lastName+
+      //     " "+
+      //     username
       // );
 
       User.findOne({ email }, (err, user) => {
