@@ -19,11 +19,8 @@
   },
   "homepage": "https://github.com/Pr0jectStack/Stack-backend#readme",
   "dependencies": {
-<<<<<<< HEAD
     "@sendgrid/mail": "^7.4.2",
     "body-parser": "^1.19.0",
-=======
->>>>>>> 61cd611136b40a5c4e1c4f7ed8cd60b83eeb810d
     "connect-mongo": "^4.2.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
