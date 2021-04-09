@@ -9,7 +9,9 @@ const {
   signin,
   signout,
   usernameAvailability,
-  verifyEmail
+  verifyEmail,
+  forgotPassword,
+  resetPassword
 } = require("../controllers/auth");
 
 
@@ -49,5 +51,20 @@ router.post("/checkUserNameAvailability",usernameAvailability);
 
 
 router.get("/email-verify", verifyEmail);
+
+router.put(
+  "/forgotPassword",
+  [check("email", "Enter a valid email").normalizeEmail().isEmail()],
+  forgotPassword
+);
+router.put(
+  "/resetPassword",
+  [
+    check("newPass", "Password must be atleast 8 characters long").isLength({
+      min: 8,
+    }),
+  ],
+  resetPassword
+);
 
 module.exports = router;
