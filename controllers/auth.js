@@ -19,6 +19,7 @@ exports.signin = (req, res) => {
     $or: [{ email: username }, { username: username }],
   })
     .populate("workspaces")
+    .populate("teams")
     .exec((err, user) => {
       if (err || !user) {
         return res.status(400).json({ error: "User not found!" });
