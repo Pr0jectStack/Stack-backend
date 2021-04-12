@@ -40,7 +40,7 @@ router.post(
   [
     check("password", "Password must be atleast 8 characters long").isLength({
       min: 8,
-    }),
+    })
   ],
   signin
 );
