@@ -4,6 +4,7 @@ var jwt = require("jsonwebtoken");
 var expressJwt = require("express-jwt");
 const sgMail = require("@sendgrid/mail");
 const _ = require("lodash");
+var normalizeEmail = require('normalize-email')
 const secret = process.env.SECRET;
 
 const replaceDot = (token) => {
@@ -40,7 +41,12 @@ exports.signin = (req, res) => {
     });
   }
 
-  const { username_email, password } = req.body;
+  let { username_email, password } = req.body;
+  
+  if(username_email.includes("@")){
+    username_email=normalizeEmail(username_email);
+  }
+
   let username = username_email;
   User.findOne({
     $or: [{ email: username }, { username: username }],
