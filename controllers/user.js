@@ -12,6 +12,7 @@ exports.getUserById = (req, res) => {
   User.findById(userId)
     .lean()
     .populate("workspaces")
+    .populate("teams")
     .exec((err, user) => {
       if (err) {
         return res
@@ -37,6 +38,7 @@ exports.updateUserProfile = (req, res) => {
 
   User.findByIdAndUpdate(userId, { bio, socialMediaHandles }, { new: true })
     .populate("workspaces")
+    .populate("teams")
     .exec((err, data) => {
       if (err) {
         return res.status(400).json({
@@ -83,10 +85,12 @@ exports.updateUserPassword = (req, res) => {
         console.log(err);
         return res.status(400).json({ error: err });
       }
-      user.encrypted_password = null;
-      user.salt = null;
-      user.updatedAt = null;
-      return res.status(200).json({ message: user });
+      user.populate("workspaces teams", function (err, user) {
+        user.encrypted_password = null;
+        user.salt = null;
+        user.updatedAt = null;
+        return res.status(200).json({ data: user });
+      });
     });
   });
 };
@@ -139,10 +143,12 @@ exports.updateUserImage = (req, res) => {
                 message: err,
               });
             } else {
-              user.encrypted_password = null;
-              user.salt = null;
-              user.updatedAt = null;
-              return res.status(200).json({ data: user });
+              user.populate("workspaces teams", function (err, updatedUser) {
+                updatedUser.encrypted_password = null;
+                updatedUser.salt = null;
+                updatedUser.updatedAt = null;
+                return res.status(200).json({ data: updatedUser });
+              });
             }
           });
         }
