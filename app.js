@@ -10,6 +10,7 @@ const connectDB = require("./config/connect_db");
 const cookieParser = require("cookie-parser");
 // const session = require("express-session");
 const { default: MongoStore } = require("connect-mongo");
+const Team = require("./models/Team");
 
 // Init Express
 const app = express();
@@ -34,7 +35,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Connect Database
-connectDB();
+// connectDB();
 
 app.use("/", authRoutes);
 app.use("/auth", authRoutes);
@@ -42,7 +43,57 @@ app.use("/db", dbRoutes);
 
 const PORT = process.env.PORT || 5000;
 
+// SOCKET TESTING
+const server = require("http").createServer(app);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT"],
+    credentials: true,
+  },
+});
+
+let taskStream;
+io.on("connection", (socket) => {
+  socket.on("join", (userId, tid) => {
+    console.log(`A client with id ${userId} has connected`);
+    socket.join(tid);
+  });
+  if (taskStream) {
+    taskStream.on("change", (next) => {
+      Team.findOne({ tasks: { $in: [next.fullDocument._id] } })
+        .populate("tasks")
+        .populate({
+          path: "tasks",
+          populate: {
+            path: "membersAssigned",
+          },
+        })
+        .populate("members", "firstname username email skypeId")
+        .exec((err, team) => {
+          if (err || !team) console.log(err);
+          else {
+            io.emit(team._id, team);
+          }
+        });
+    });
+  }
+});
+
 // Launch Server
-app.listen(PORT, (req, res) => {
+server.listen(PORT, async (req, res) => {
+  const client = await connectDB();
+  const taskCollection = client.db("stack").collection("tasks");
+  taskStream = taskCollection.watch(
+    [
+      {
+        $match: {
+          $or: [{ operationType: "insert" }, { operationType: "update" }],
+        },
+      },
+    ],
+    { fullDocument: "updateLookup" }
+  );
+
   console.log(`Server running on port ${PORT}`);
 });

@@ -33,6 +33,7 @@
     "lodash": "^4.17.21",
     "mongoose": "^5.11.18",
     "normalize-email": "^1.1.1",
+    "socket.io": "^4.0.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
