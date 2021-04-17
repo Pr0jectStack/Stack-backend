@@ -34,16 +34,13 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Connect Database
-// connectDB();
-
 app.use("/", authRoutes);
 app.use("/auth", authRoutes);
 app.use("/db", dbRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// SOCKET TESTING
+// SOCKET SETUP
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
   cors: {
@@ -53,12 +50,22 @@ const io = require("socket.io")(server, {
   },
 });
 
-let taskStream;
+let taskStream; // Store the [ChangeStream] for tasks
+
+let rooms = []; // 'Set' for rooms available.
+
+/**
+ * Open a Socket connection.
+ * JOIN - Add a user to a room with Room Id same as teamId (tid).
+ * CHANGE - [ChangeStream] listener which notifies about updates, Use socket to emit infos.
+ */
 io.on("connection", (socket) => {
   socket.on("join", (userId, tid) => {
     console.log(`A client with id ${userId} has connected`);
+    if (!rooms.includes(tid.toString())) rooms.push(tid);
     socket.join(tid);
   });
+
   if (taskStream) {
     taskStream.on("change", (next) => {
       Team.findOne({ tasks: { $in: [next.fullDocument._id] } })
@@ -73,16 +80,25 @@ io.on("connection", (socket) => {
         .exec((err, team) => {
           if (err || !team) console.log(err);
           else {
-            io.emit(team._id, team);
+            const index = rooms.indexOf(team._id.toString());
+            io.to(rooms[index]).emit("tasks", team);
           }
         });
     });
   }
 });
 
-// Launch Server
+/**
+ * Open Server on 'PORT'.
+ * Connect to the database, get references for collections and open [ChangeStreams] on them.
+ */
 server.listen(PORT, async (req, res) => {
-  const client = await connectDB();
+  // Connect to DB
+  const connection = await connectDB();
+  const client = connection.client;
+
+  // FIXME: 11 listeners added to [ChangeStream]. Why and how ? <- Happening Sometimes. Possible MemoryLeak
+
   const taskCollection = client.db("stack").collection("tasks");
   taskStream = taskCollection.watch(
     [
@@ -94,6 +110,5 @@ server.listen(PORT, async (req, res) => {
     ],
     { fullDocument: "updateLookup" }
   );
-
   console.log(`Server running on port ${PORT}`);
 });
