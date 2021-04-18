@@ -11,6 +11,7 @@ const cookieParser = require("cookie-parser");
 // const session = require("express-session");
 const { default: MongoStore } = require("connect-mongo");
 const Team = require("./models/Team");
+const Chat = require("./models/Chat");
 
 // Init Express
 const app = express();
@@ -50,7 +51,7 @@ const io = require("socket.io")(server, {
   },
 });
 
-let taskStream; // Store the [ChangeStream] for tasks
+let taskStream, chatStream; // Store the [ChangeStream] for tasks, chats
 
 let rooms = []; // 'Set' for rooms available.
 
@@ -62,7 +63,7 @@ let rooms = []; // 'Set' for rooms available.
 io.on("connection", (socket) => {
   socket.on("join", (tid) => {
     console.log(`A client has connected to room ${tid}`);
-    if (!rooms.includes(tid.toString())) rooms.push(tid);
+    if (tid && !rooms.includes(tid.toString())) rooms.push(tid);
     socket.join(tid);
   });
 
@@ -78,10 +79,26 @@ io.on("connection", (socket) => {
         })
         .populate("members", "firstname username email skypeId")
         .exec((err, team) => {
-          if (err || !team) console.log(err);
-          else {
+          if (err || !team) {
+            console.log(err);
+          } else {
             const index = rooms.indexOf(team._id.toString());
             io.to(rooms[index]).emit("tasks", team);
+          }
+        });
+    });
+  }
+
+  if (chatStream) {
+    chatStream.on("change", (next) => {
+      Chat.find({ chatId: next.fullDocument.chatId })
+        .sort("createdAt")
+        .exec((err, chats) => {
+          if (err) {
+            console.log(err);
+          } else {
+            const index = rooms.indexOf(next.fullDocument.chatId.toString());
+            io.to(rooms[index]).emit("chats", chats);
           }
         });
     });
@@ -100,6 +117,9 @@ server.listen(PORT, async (req, res) => {
   // FIXME: 11 listeners added to [ChangeStream]. Why and how ? <- Happening Sometimes. Possible MemoryLeak
 
   const taskCollection = client.db("stack").collection("tasks");
+  const chatCollection = client.db("stack").collection("chats");
+
+  // Watch for changes in 'tasks' collection
   taskStream = taskCollection.watch(
     [
       {
@@ -110,5 +130,18 @@ server.listen(PORT, async (req, res) => {
     ],
     { fullDocument: "updateLookup" }
   );
+
+  // Watch for changes in 'chats' collection
+  chatStream = chatCollection.watch(
+    [
+      {
+        $match: {
+          $or: [{ operationType: "insert" }, { operationType: "update" }],
+        },
+      },
+    ],
+    { fullDocument: "updateLookup" }
+  );
+
   console.log(`Server running on port ${PORT}`);
 });
