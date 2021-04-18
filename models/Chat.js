@@ -3,22 +3,25 @@ const Schema = mongoose.Schema;
 
 const { ObjectId } = Schema;
 
-const Chat = new Schema({
-  chatId: {
-    type: String,
-    required: true,
-    trim: true,
+const Chat = new Schema(
+  {
+    chatId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    username: {
+      type: ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
-  message: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  username: {
-    type: ObjectId,
-    ref: "User",
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.models.Chat || mongoose.model("Chat", Chat);

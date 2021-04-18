@@ -60,8 +60,8 @@ let rooms = []; // 'Set' for rooms available.
  * CHANGE - [ChangeStream] listener which notifies about updates, Use socket to emit infos.
  */
 io.on("connection", (socket) => {
-  socket.on("join", (userId, tid) => {
-    console.log(`A client with id ${userId} has connected`);
+  socket.on("join", (tid) => {
+    console.log(`A client has connected to room ${tid}`);
     if (!rooms.includes(tid.toString())) rooms.push(tid);
     socket.join(tid);
   });
