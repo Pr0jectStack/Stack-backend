@@ -23,6 +23,7 @@ const {
   assignMembersToTask,
   removeMembersFromTask,
 } = require("../controllers/tasks");
+const { addChat, fetchChatMessages } = require("../controllers/chat");
 const router = express.Router();
 
 router.get("/getUserById", getUserById);
@@ -45,5 +46,8 @@ router.put("/editTask", editTask);
 router.put("/assignMembersToTask", assignMembersToTask);
 router.put("/removeMembersFromTask", removeMembersFromTask);
 router.post("/deleteTask", deleteTask);
+
+router.post("/addChat", addChat);
+router.get("/getChats", fetchChatMessages);
 
 module.exports = router;
