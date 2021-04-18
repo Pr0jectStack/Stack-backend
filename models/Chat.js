@@ -15,10 +15,15 @@ const Chat = new Schema(
       required: true,
       trim: true,
     },
-    username: {
+    userId: {
       type: ObjectId,
       ref: "User",
       required: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      trim: true,
     },
   },
   { timestamps: true }
