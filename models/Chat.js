@@ -1,28 +1,32 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+
 const { ObjectId } = Schema;
 
-const Workspace = new Schema(
+const Chat = new Schema(
   {
-    name: {
+    chatId: {
       type: String,
       required: true,
       trim: true,
     },
-    owner: {
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    userId: {
       type: ObjectId,
       ref: "User",
       required: true,
     },
-    description: {
+    username: {
       type: String,
-      default: "",
+      required: true,
+      trim: true,
     },
-    teams: [{ type: ObjectId, ref: "Team" }],
-    members: [{ type: ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
 
-module.exports =
-  mongoose.models.Workspace || mongoose.model("Workspace", Workspace);
+module.exports = mongoose.models.Chat || mongoose.model("Chat", Chat);
