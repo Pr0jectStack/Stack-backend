@@ -35,18 +35,8 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-if (process.env.name === "production") {
-  app.get("*", function response(req, res) {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-  });
-}
-
 app.get("/service-worker.js", (req, res) => {
   res.sendFile(path.resolve(__dirname, "public", "service-worker.js"));
-});
-
-app.get("*", function response(req, res) {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.use("/", authRoutes);
