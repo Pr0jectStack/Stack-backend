@@ -35,10 +35,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-app.get("/service-worker.js", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "public", "service-worker.js"));
-});
-
 app.use("/", authRoutes);
 app.use("/auth", authRoutes);
 app.use("/db", dbRoutes);
