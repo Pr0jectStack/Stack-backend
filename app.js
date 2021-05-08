@@ -35,7 +35,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-if (env.name === "production") {
+if (process.env.name === "production") {
   app.get("*", function response(req, res) {
     res.sendFile(path.join(__dirname, "public", "index.html"));
   });
