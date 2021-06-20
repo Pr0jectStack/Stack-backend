@@ -63,42 +63,46 @@ exports.createWorkspace = (req, res) => {
   );
 };
 
-exports.deleteWorkspace = (req, res) => {
-  const workspaceId = req.body.workspaceId;
+exports.hideWorkspace = (req, res) => {
+  const wid = req.body.workspaceId;
+  const uid = req.body.userId; 
 
-  Workspace.findOne({ _id: workspaceId }, (err, workspace) => {
-    if (err) {
-      return res.status(400).json({
-        error: "Unexpected error",
-      });
-    } else if (!workspace) {
-      return res.status(404).json({
-        error: "Workspace not found",
-      });
-    } else {
-      const teams = workspace.teams;
-      teams.forEach((team, index) => {
-        //TODO: add deleteTeam functionality
-      });
+  Workspace.findOne({_id: wid})
+  .exec(async(err,workspace)=>{
 
-      const members = workspace.members;
-      members.forEach((user, index) => {
-        //TODO: Delete workspace id from user's workspaces array
-      });
-
-      Workspace.findOneAndDelete({ _id: workspaceId }, (err) => {
-        if (err) {
+    if(uid == workspace.owner){
+      if(err || !workspace){
+          //Error
           return res.status(400).json({
-            error: "Unexpected error while deleting workspace",
+            error: "Failed to find workspace",
+            id: wid,
           });
-        } else {
-          return res.status(200).json({
-            message: "Workspace deleted successfully",
-          });
-        }
+      }
+      else{
+        workspace.hidden = true;
+        workspace.save((err,workspace)=>{
+          if(err){
+            //Error
+            return res.status(400).json({
+              error: "Failed to hide workspace",
+              id: wid,
+            });
+          }
+          else{
+            return res.status(200).json({
+              workspace:workspace,
+              message:"Workspace is hidden successfully"
+            })
+          }
+        })
+      }
+    }
+    else{
+      return res.status(401).json({
+        error: "Unauthorized",
       });
     }
-  });
+  })
 };
 
 exports.getWorkspaceById = (req, res) => {

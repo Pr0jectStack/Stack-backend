@@ -28,6 +28,10 @@ const Team = new Schema(
       required: true,
     },
     tasks: [{ type: ObjectId, ref: "Task" }],
+    hidden:{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

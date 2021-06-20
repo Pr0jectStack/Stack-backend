@@ -110,8 +110,9 @@ exports.getTeamById = (req, res) => {
     });
 };
 
-exports.deleteTeam = (req, res) => {
+exports.hideTeam = (req, res) => {
   const teamId = req.body.teamId;
+  const userId = req.body.userId;
 
   Team.findOne({ _id: teamId }, (err, team) => {
     if (err) {
@@ -124,28 +125,27 @@ exports.deleteTeam = (req, res) => {
         error: "Team not found",
       });
     }
-
-    const members = team.members;
-    members.forEach((user, index) => {
-      //TODO: Delete workspace id from user's teams array
-    });
-
-    const tasks = workspace.tasks;
-    tasks.forEach((task, index) => {
-      //TODO: remove tasks functionality
-    });
-
-    Team.findOneAndDelete({ _id: teamId }, (err) => {
-      if (err) {
-        return res.status(400).json({
-          error: "Unexpected error while deleting Team",
-        });
-      } else {
-        return res.status(200).json({
-          message: "Team deleted successfully",
-        });
-      }
-    });
+    if( userId == team.owner){
+      team.hidden =true;
+      team.save((err,team)=>{
+        if(err){
+          return res.status(400).json({
+            error:"Failed to hide team",
+            id:teamId
+          })
+        }else{
+          return res.status(200).json({
+            team:team,
+            message:"Team hidden successfully"
+          })
+        }
+      })
+    }
+    else{
+      return res.status(401).json({
+        "error":"Unauthorized"
+      })
+    }
   });
 };
 

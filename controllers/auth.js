@@ -51,7 +51,11 @@ exports.signin = (req, res) => {
   User.findOne({
     $or: [{ email: username }, { username: username }],
   })
-    .populate("workspaces")
+    .populate({
+      path: 'workspaces',
+      match: { hidden: false }
+    })
+    // .populate("workspaces",{hidden:false})
     .populate("teams")
     .exec((err, user) => {
       if (err || !user) {

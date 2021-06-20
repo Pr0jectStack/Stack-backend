@@ -9,11 +9,13 @@ const {
   createWorkspace,
   getWorkspaceById,
   addMembersToWorkspace,
+  hideWorkspace
 } = require("../controllers/workspace");
 const {
   createTeam,
   addMembersToTeam,
   getTeamById,
+  hideTeam
 } = require("../controllers/team");
 const {
   addTask,
@@ -49,5 +51,10 @@ router.post("/deleteTask", deleteTask);
 
 router.post("/addChat", addChat);
 router.get("/getChats", fetchChatMessages);
+
+
+
+router.post("/hideWorkspace",hideWorkspace);
+router.post("/hideTeam",hideTeam);
 
 module.exports = router;
