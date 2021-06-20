@@ -4,11 +4,12 @@ const Task = require("../models/Task");
 const Workspace = require("../models/Workspace");
 
 exports.createTeam = (req, res) => {
-  const { name, owner, wid, inviteLink } = req.body;
+  const { name, owner, wid, inviteLink, teamLeader } = req.body;
 
-  const newTeam = new Team({ name, owner, inviteLink });
+  const newTeam = new Team({ name, owner, inviteLink, teamLeader });
   let members = [];
   members.push(owner);
+  if (teamLeader.length > 0 && teamLeader !== owner) members.push(teamLeader);
   newTeam.members = members;
 
   /**
@@ -18,12 +19,15 @@ exports.createTeam = (req, res) => {
    *   4. return status 200
    */
 
+  // TODO: Break into smaller pieces ?
+
   Team.findOne({ $and: [{ name: name }, { workspace: wid }] }, (err, teamP) => {
     if (teamP) {
       return res.status(405).json({
         error: "Team with same name already exists",
       });
     } else {
+      // Create new team
       newTeam.save((err, team) => {
         if (err) {
           console.log(err);
@@ -31,6 +35,7 @@ exports.createTeam = (req, res) => {
             error: "Unexpected error while creating team",
           });
         } else {
+          // Add team to Owner
           User.findOne({ _id: owner }, (err, user) => {
             if (err) {
               return res.status(400).json({
@@ -49,6 +54,34 @@ exports.createTeam = (req, res) => {
                     error: "Unexpected error while updating user",
                   });
                 } else {
+                  // Add team to teamLeader
+                  if (teamLeader.length > 0 && teamLeader !== owner) {
+                    User.findOne({ _id: teamLeader }, (err, user) => {
+                      if (err) {
+                        return res
+                          .status(400)
+                          .json({
+                            error: "Unexpected error while finding user",
+                          });
+                      } else {
+                        if (user.teams) user.teams.push(team._id);
+                        else {
+                          let teams = [];
+                          teams.push(team._id);
+                          user.teams = teams;
+                        }
+                        user.save((err, user) => {
+                          if (err) {
+                            return res.status(400).json({
+                              error: "UNexpected error while updating user",
+                            });
+                          }
+                        });
+                      }
+                    });
+                  }
+
+                  // Add team to Worskspace
                   Workspace.findOne({ _id: wid }, (err, workspace) => {
                     if (err || !workspace) {
                       return res.status(400).json({
@@ -84,6 +117,7 @@ exports.createTeam = (req, res) => {
     }
   });
 };
+
 
 exports.getTeamById = (req, res) => {
   const tid = req.query.tid;
