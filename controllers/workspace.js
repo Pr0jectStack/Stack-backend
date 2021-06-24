@@ -65,51 +65,51 @@ exports.createWorkspace = (req, res) => {
 
 exports.hideWorkspace = (req, res) => {
   const wid = req.body.workspaceId;
-  const uid = req.body.userId; 
+  const uid = req.body.userId;
 
-  Workspace.findOne({_id: wid})
-  .exec(async(err,workspace)=>{
-
-    if(uid == workspace.owner){
-      if(err || !workspace){
-          //Error
-          return res.status(400).json({
-            error: "Failed to find workspace",
-            id: wid,
-          });
-      }
-      else{
+  Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
+    if (uid == workspace.owner) {
+      if (err || !workspace) {
+        //Error
+        return res.status(400).json({
+          error: "Failed to find workspace",
+          id: wid,
+        });
+      } else {
         workspace.hidden = true;
-        workspace.save((err,workspace)=>{
-          if(err){
+        workspace.save((err, workspace) => {
+          if (err) {
             //Error
             return res.status(400).json({
               error: "Failed to hide workspace",
               id: wid,
             });
-          }
-          else{
+          } else {
             return res.status(200).json({
-              workspace:workspace,
-              message:"Workspace is hidden successfully"
-            })
+              workspace: workspace,
+              message: "Workspace is hidden successfully",
+            });
           }
-        })
+        });
       }
-    }
-    else{
+    } else {
       return res.status(401).json({
         error: "Unauthorized",
       });
     }
-  })
+  });
 };
 
+/**
+ * Fetch workspace by ID.
+ * @param {String} req - Query paramter: Workspace ID
+ * @param {Response} res - Workspace on success
+ */
 exports.getWorkspaceById = (req, res) => {
-  const wid = req.body.wid;
+  const wid = req.query.wid;
   Workspace.findOne({ _id: wid })
     .populate("teams")
-    .populate("members", "firstname username email skypeId")
+    .populate("members", "firstname lastname username email skypeId image")
     .exec((err, workspace) => {
       if (err || !workspace) {
         return res.status(400).json({
@@ -124,6 +124,13 @@ exports.getWorkspaceById = (req, res) => {
     });
 };
 
+/**
+ * Add new members to workspace, iff requesting userId === ownerId,
+ * and user already has an account on the website.
+ *
+ * @param {object} req - Workspace Id, members, userId
+ * @param {Response} res - Updated Workspace
+ */
 exports.addMembersToWorkspace = (req, res) => {
   /**
    * TODO: Check if isAuthenticated to add member [must be a owner]
@@ -170,9 +177,22 @@ exports.addMembersToWorkspace = (req, res) => {
         if (err) {
           return res.status(400).json({ error: err.message });
         } else {
-          return res
-            .status(200)
-            .json({ workspace: workspace, message: "Successfully Added!" });
+          // Populate the [members] and [teams] field in workspace.
+          workspace
+            .populate("teams")
+            .populate(
+              "members",
+              "firstname lastname username email skypeId image",
+              function (err, populatedWorkspace) {
+                if (err) {
+                  return res.status(400).json({ error: err });
+                }
+                return res.status(200).json({
+                  workspace: populatedWorkspace,
+                  message: "Successfully Added!",
+                });
+              }
+            );
         }
       });
     }
