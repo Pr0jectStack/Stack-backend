@@ -16,6 +16,7 @@ const {
   addMembersToTeam,
   getTeamById,
   hideTeam,
+  makeTeamLeader,
 } = require("../controllers/team");
 const {
   addTask,
@@ -41,6 +42,7 @@ router.get("/getWorkspaceById", getWorkspaceById);
 router.post("/createTeam", createTeam);
 router.post("/addMembersToTeam", addMembersToTeam);
 router.get("/getTeamById", getTeamById);
+router.put("/makeTeamLeader", makeTeamLeader);
 
 router.post("/addTask", addTask);
 router.put("/moveTask", moveTask);

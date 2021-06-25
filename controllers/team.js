@@ -255,7 +255,7 @@ exports.addMembersToTeam = (req, res) => {
                 "firstname lastname username email skypeId image",
                 function (err, populatedTeam) {
                   if (err) {
-                    return res.status(400).json({ error: err });
+                    return res.status(400).json({ error: err.message });
                   } else {
                     return res.status(200).json({
                       team: populatedTeam,
@@ -269,6 +269,49 @@ exports.addMembersToTeam = (req, res) => {
         }
       });
       // *****************
+    }
+  });
+};
+
+exports.makeTeamLeader = (req, res) => {
+  // TODO: Take requesting userId as input to check authorization
+  const { tid, memberId } = req.body;
+
+  Team.findOne({ _id: tid }).exec((err, team) => {
+    if (err || !team) {
+      return res.status(400).json({ error: "Team not found!" });
+    } else {
+      const { owner, teamLeader } = team;
+      if (memberId === owner || memberId === teamLeader) {
+        return res.status(400).json({
+          error: "User is not a member. Cannot change to Team Leader.",
+        });
+      } else {
+        // Change the teamLeader
+        team.teamLeader = memberId;
+
+        team.save((err, updatedTeam) => {
+          if (err) {
+            return res.status(400).json({ error: err.message });
+          } else {
+            // Popluate the [members] field in team.
+            team.populate(
+              "members",
+              "firstname lastname username email skypeId image",
+              function (err, populatedTeam) {
+                if (err) {
+                  return res.status(400).json({ error: err.message });
+                } else {
+                  return res.status(200).json({
+                    team: populatedTeam,
+                    message: "Successfully changed the Team Leader!",
+                  });
+                }
+              }
+            );
+          }
+        });
+      }
     }
   });
 };
