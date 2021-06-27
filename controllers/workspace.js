@@ -64,18 +64,18 @@ exports.createWorkspace = (req, res) => {
 };
 
 exports.deleteWorkspace = (req, res) => {
-  const wid = req.body.workspaceId;
-  const uid = req.body.userId;
+  const { wid, userId } = req.body;
+  console.log(userId);
 
-  Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid === workspace.owner) {
-      if (err || !workspace) {
-        //Error
-        return res.status(400).json({
-          error: "Failed to find workspace",
-          id: wid,
-        });
-      } else {
+  Workspace.findOne({ _id: wid }).exec((err, workspace) => {
+    if (err || !workspace) {
+      //Error
+      return res.status(400).json({
+        error: "Failed to find workspace",
+        id: wid,
+      });
+    } else {
+      if (userId === workspace.owner.toString()) {
         workspace.deleted = true;
         workspace.save((err, workspace) => {
           if (err) {
@@ -91,17 +91,17 @@ exports.deleteWorkspace = (req, res) => {
             });
           }
         });
+      } else {
+        return res.status(401).json({
+          error: "Unauthorized",
+        });
       }
-    } else {
-      return res.status(401).json({
-        error: "Unauthorized",
-      });
     }
   });
 };
 
 exports.getDeletedWorkspaces = (req, res) => {
-  const userId = req.query.uid;
+  const userId = req.query.userId;
 
   Workspace.find({ owner: userId, deleted: true }).exec((err, workspaces) => {
     if (err || !workspaces) {
@@ -117,11 +117,10 @@ exports.getDeletedWorkspaces = (req, res) => {
 };
 
 exports.restoreWorkspace = (req, res) => {
-  const wid = req.body.workspaceId;
-  const uid = req.body.userId;
+  const { wid, userId } = req.body;
 
   Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid === workspace.owner) {
+    if (userId === workspace.owner) {
       if (err || !workspace) {
         //Error
         return res.status(400).json({
