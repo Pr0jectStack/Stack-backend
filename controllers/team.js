@@ -4,13 +4,19 @@ const Task = require("../models/Task");
 const Workspace = require("../models/Workspace");
 
 exports.createTeam = (req, res) => {
-  const { name, owner, wid, inviteLink, teamLeader } = req.body;
+  const { name, owner, wid, inviteLink } = req.body;
 
-  const newTeam = new Team({ name, owner, inviteLink, teamLeader });
+  let teamLeader=null;
+  teamLeader=req.body?.teamLeader;
+
+  const newTeam = new Team({ name, owner, inviteLink});
   let members = [];
   members.push(owner);
   if (teamLeader && teamLeader.length > 0 && teamLeader !== owner)
-    members.push(teamLeader);
+    {
+      members.push(teamLeader);
+      newTeam.teamLeader=teamLeader;
+    }
   newTeam.members = members;
 
   /**
@@ -189,6 +195,44 @@ exports.hideTeam = (req, res) => {
   });
 };
 
+exports.restoreTeam = (req, res) => {
+  const teamId = req.body.teamId;
+  const userId = req.body.userId;
+
+  Team.findOne({ _id: teamId }, (err, team) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Unexpected error",
+      });
+    }
+    if (!team) {
+      return res.status(404).json({
+        error: "Team not found",
+      });
+    }
+    if (userId == team.owner) {
+      team.hidden = false;
+      team.save((err, team) => {
+        if (err) {
+          return res.status(400).json({
+            error: "Failed to restore team",
+            id: teamId,
+          });
+        } else {
+          return res.status(200).json({
+            team: team,
+            message: "Team has been restored successfully",
+          });
+        }
+      });
+    } else {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+  });
+};
+
 /**
  * Add new members to team, iff requesting user (identified by [userId]) is owner or Team Leader,
  * and user already is a part of the workspace.
@@ -315,3 +359,25 @@ exports.makeTeamLeader = (req, res) => {
     }
   });
 };
+
+exports.getHiddenTeams = (req,res) => {
+    const wid = req.query.wid;
+
+    Workspace.findOne({ _id: wid })
+    .populate({
+      path: 'teams',
+      match: { hidden: true }
+    })
+    .exec((err, workspace) => {
+      if (err || !workspace) {
+        return res.status(400).json({
+          error: "Workspace not found",
+          id: wid,
+        });
+      } else {
+        return res.status(200).json({
+          teams: workspace.teams,
+        });
+      }
+    });
+}

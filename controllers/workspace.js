@@ -100,6 +100,45 @@ exports.hideWorkspace = (req, res) => {
   });
 };
 
+
+exports.restoreWorkspace = (req, res) => {
+  const wid = req.body.workspaceId;
+  const uid = req.body.userId;
+
+  Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
+    if (uid == workspace.owner) {
+      if (err || !workspace) {
+        //Error
+        return res.status(400).json({
+          error: "Failed to find workspace",
+          id: wid,
+        });
+      } else {
+        workspace.hidden = false;
+        workspace.save((err, workspace) => {
+          if (err) {
+            //Error
+            return res.status(400).json({
+              error: "Failed to restore workspace",
+              id: wid,
+            });
+          } else {
+            return res.status(200).json({
+              workspace: workspace,
+              message: "Workspace has been restored successfully",
+            });
+          }
+        });
+      }
+    } else {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+  });
+};
+
+
 /**
  * Fetch workspace by ID.
  * @param {String} req - Query paramter: Workspace ID
@@ -108,7 +147,10 @@ exports.hideWorkspace = (req, res) => {
 exports.getWorkspaceById = (req, res) => {
   const wid = req.query.wid;
   Workspace.findOne({ _id: wid })
-    .populate("teams")
+    .populate({
+      path: 'teams',
+      match: { hidden: false }
+    })
     .populate("members", "firstname lastname username email skypeId image")
     .exec((err, workspace) => {
       if (err || !workspace) {
@@ -198,3 +240,21 @@ exports.addMembersToWorkspace = (req, res) => {
     }
   });
 };
+
+
+exports.getHiddenWorkspaces = (req,res) => {
+  const userId =req.query.uid;
+
+  Workspace.find({ owner: userId, hidden:true })
+  .exec((err, workspaces) => {
+    if (err || !workspaces) {
+      return res.status(400).json({
+        error: "No Workspaces not found",
+      });
+    } else {
+      return res.status(200).json({
+        workspaces: workspaces,
+      });
+    }
+  });
+}

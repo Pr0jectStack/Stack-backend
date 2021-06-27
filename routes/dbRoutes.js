@@ -10,13 +10,17 @@ const {
   getWorkspaceById,
   addMembersToWorkspace,
   hideWorkspace,
+  restoreWorkspace,
+  getHiddenWorkspaces,
 } = require("../controllers/workspace");
 const {
   createTeam,
   addMembersToTeam,
   getTeamById,
   hideTeam,
+  restoreTeam,
   makeTeamLeader,
+  getHiddenTeams
 } = require("../controllers/team");
 const {
   addTask,
@@ -56,5 +60,10 @@ router.get("/getChats", fetchChatMessages);
 
 router.post("/hideWorkspace", hideWorkspace);
 router.post("/hideTeam", hideTeam);
+router.post("/restoreWorkspace", restoreWorkspace);
+router.post("/restoreTeam", restoreTeam);
+
+router.get("/getHiddenTeams",getHiddenTeams);
+router.get("/getHiddenWorkspaces",getHiddenWorkspaces);
 
 module.exports = router;
