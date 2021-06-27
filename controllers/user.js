@@ -10,17 +10,16 @@ const User = require("../models/User");
 exports.getUserById = (req, res) => {
   const userId = req.query.userId;
   User.findById(userId)
-    .lean()
     .populate({
-      path: 'workspaces',
-      match: { deleted: false }
+      path: "workspaces",
+      match: { deleted: false },
     })
     .populate({
-      path: 'teams',
-      match: { deleted: false }
+      path: "teams",
+      match: { deleted: false },
     })
     .exec((err, user) => {
-      if (err) {
+      if (err || !user) {
         return res
           .status(400)
           .json({ error: "Error occured! Cannot fetch user!" });
@@ -43,14 +42,14 @@ exports.updateUserProfile = (req, res) => {
   const { bio, socialMediaHandles } = req.body;
 
   User.findByIdAndUpdate(userId, { bio, socialMediaHandles }, { new: true })
-  .populate({
-    path: 'workspaces',
-    match: { deleted: false }
-  })
-  .populate({
-    path: 'teams',
-    match: { deleted: false }
-  })
+    .populate({
+      path: "workspaces",
+      match: { deleted: false },
+    })
+    .populate({
+      path: "teams",
+      match: { deleted: false },
+    })
     .exec((err, data) => {
       if (err) {
         return res.status(400).json({
@@ -82,15 +81,11 @@ exports.updateUserPassword = (req, res) => {
   User.findById(userId).exec((err, user) => {
     if (err) {
       return res.status(400).json({ error: err });
-    }
-
-    else if (!user.authenticate(password)) {
+    } else if (!user.authenticate(password)) {
       return res.status(400).json({
         error: "Old password is incorrect!",
       });
-    }
-
-    else{
+    } else {
       user.password = new_password;
 
       user.save((err, user) => {
