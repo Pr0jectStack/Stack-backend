@@ -10,6 +10,7 @@ const {
   getWorkspaceById,
   addMembersToWorkspace,
   hideWorkspace,
+  updateWorkspaceDetails,
 } = require("../controllers/workspace");
 const {
   createTeam,
@@ -17,6 +18,7 @@ const {
   getTeamById,
   hideTeam,
   makeTeamLeader,
+  updateTeamDetails,
 } = require("../controllers/team");
 const {
   addTask,
@@ -38,11 +40,13 @@ router.put("/updateUserImage", updateUserImage);
 router.post("/createWorkspace", createWorkspace);
 router.post("/addMembersToWorkspace", addMembersToWorkspace);
 router.get("/getWorkspaceById", getWorkspaceById);
+router.put("/updateWorkspaceDetails", updateWorkspaceDetails);
 
 router.post("/createTeam", createTeam);
 router.post("/addMembersToTeam", addMembersToTeam);
 router.get("/getTeamById", getTeamById);
 router.put("/makeTeamLeader", makeTeamLeader);
+router.put("/updateTeamDetails", updateTeamDetails);
 
 router.post("/addTask", addTask);
 router.put("/moveTask", moveTask);

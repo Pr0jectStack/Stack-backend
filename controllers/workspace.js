@@ -198,3 +198,44 @@ exports.addMembersToWorkspace = (req, res) => {
     }
   });
 };
+
+/**
+ * Update Name and Description for a Workspace.
+ * @param {Object} req - Workspace id(wid), name, description
+ * @param {Response} res
+ */
+exports.updateWorkspaceDetails = (req, res) => {
+  // TODO: Add authentication for confirming the validity of the operation
+
+  const { wid, name, description } = req.body;
+  Workspace.findOne({ _id: wid }).exec((err, workspace) => {
+    if (err || !workspace) {
+      return res.status(400).json({ error: "Workspace not found!" });
+    } else {
+      workspace.name = name;
+      workspace.description = description;
+      workspace.save((err, udpateWorksapce) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        } else {
+          // Populate the [members] and [teams] field in workspace.
+          updatedWorkspace
+            .populate("teams")
+            .populate(
+              "members",
+              "firstname lastname username email skypeId image",
+              function (err, populatedWorkspace) {
+                if (err) {
+                  return res.status(400).json({ error: err });
+                }
+                return res.status(200).json({
+                  workspace: populatedWorkspace,
+                  message: "Successfully Updated workspace!",
+                });
+              }
+            );
+        }
+      });
+    }
+  });
+};
