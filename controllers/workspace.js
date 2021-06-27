@@ -108,7 +108,10 @@ exports.hideWorkspace = (req, res) => {
 exports.getWorkspaceById = (req, res) => {
   const wid = req.query.wid;
   Workspace.findOne({ _id: wid })
-    .populate("teams")
+    .populate({
+      path: 'teams',
+      match: { hidden: false }
+    })
     .populate("members", "firstname lastname username email skypeId image")
     .exec((err, workspace) => {
       if (err || !workspace) {

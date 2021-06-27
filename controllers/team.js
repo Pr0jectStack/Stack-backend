@@ -4,13 +4,19 @@ const Task = require("../models/Task");
 const Workspace = require("../models/Workspace");
 
 exports.createTeam = (req, res) => {
-  const { name, owner, wid, inviteLink, teamLeader } = req.body;
+  const { name, owner, wid, inviteLink } = req.body;
 
-  const newTeam = new Team({ name, owner, inviteLink, teamLeader });
+  let teamLeader=null;
+  teamLeader=req.body?.teamLeader;
+
+  const newTeam = new Team({ name, owner, inviteLink});
   let members = [];
   members.push(owner);
   if (teamLeader && teamLeader.length > 0 && teamLeader !== owner)
-    members.push(teamLeader);
+    {
+      members.push(teamLeader);
+      newTeam.teamLeader=teamLeader;
+    }
   newTeam.members = members;
 
   /**

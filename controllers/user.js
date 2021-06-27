@@ -11,8 +11,14 @@ exports.getUserById = (req, res) => {
   const userId = req.query.userId;
   User.findById(userId)
     .lean()
-    .populate("workspaces")
-    .populate("teams")
+    .populate({
+      path: 'workspaces',
+      match: { hidden: false }
+    })
+    .populate({
+      path: 'teams',
+      match: { hidden: false }
+    })
     .exec((err, user) => {
       if (err) {
         return res
@@ -37,8 +43,14 @@ exports.updateUserProfile = (req, res) => {
   const { bio, socialMediaHandles } = req.body;
 
   User.findByIdAndUpdate(userId, { bio, socialMediaHandles }, { new: true })
-    .populate("workspaces")
-    .populate("teams")
+  .populate({
+    path: 'workspaces',
+    match: { hidden: false }
+  })
+  .populate({
+    path: 'teams',
+    match: { hidden: false }
+  })
     .exec((err, data) => {
       if (err) {
         return res.status(400).json({
@@ -72,26 +84,44 @@ exports.updateUserPassword = (req, res) => {
       return res.status(400).json({ error: err });
     }
 
-    if (!user.authenticate(password)) {
+    else if (!user.authenticate(password)) {
       return res.status(400).json({
         error: "Old password is incorrect!",
       });
     }
 
-    user.password = new_password;
+    else{
+      user.password = new_password;
 
-    user.save((err, user) => {
-      if (err) {
-        console.log(err);
-        return res.status(400).json({ error: err });
-      }
-      user.populate("workspaces teams", function (err, user) {
-        user.encrypted_password = null;
-        user.salt = null;
-        user.updatedAt = null;
-        return res.status(200).json({ data: user });
+      user.save((err, user) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).json({ error: err });
+        }
+        // TODO: DONT SEND HIDDEN TEAMS/WORKSPACES
+        // user
+        // .populate({
+        //   path: 'workspaces',
+        //   match: { hidden: false }
+        // })
+        // .populate({
+        //   path: 'teams',
+        //   match: { hidden: false }
+        // })
+        // .exec((err,user)=>{
+        //   user.encrypted_password = null;
+        //   user.salt = null;
+        //   user.updatedAt = null;
+        //   return res.status(200).json({ data: user });
+        // });
+        user.populate("workspaces teams", function (err, user) {
+          user.encrypted_password = null;
+          user.salt = null;
+          user.updatedAt = null;
+          return res.status(200).json({ data: user });
+        });
       });
-    });
+    }
   });
 };
 
@@ -143,6 +173,7 @@ exports.updateUserImage = (req, res) => {
                 message: err,
               });
             } else {
+              //TODO: DONT SEND HIDDEN WORKSPACES/TEAMS
               user.populate("workspaces teams", function (err, updatedUser) {
                 updatedUser.encrypted_password = null;
                 updatedUser.salt = null;
