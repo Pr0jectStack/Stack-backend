@@ -156,7 +156,7 @@ exports.getTeamById = (req, res) => {
     });
 };
 
-exports.hideTeam = (req, res) => {
+exports.deleteTeam = (req, res) => {
   const teamId = req.body.teamId;
   const userId = req.body.userId;
 
@@ -172,7 +172,7 @@ exports.hideTeam = (req, res) => {
       });
     }
     if (userId == team.owner) {
-      team.hidden = true;
+      team.deleted = true;
       team.save((err, team) => {
         if (err) {
           return res.status(400).json({
@@ -182,7 +182,7 @@ exports.hideTeam = (req, res) => {
         } else {
           return res.status(200).json({
             team: team,
-            message: "Team hidden successfully",
+            message: "Team deleted successfully",
           });
         }
       });
@@ -192,6 +192,28 @@ exports.hideTeam = (req, res) => {
       });
     }
   });
+};
+
+exports.getDeletedTeams = (req, res) => {
+  const wid = req.query.wid;
+
+  Workspace.findOne({ _id: wid })
+    .populate({
+      path: "teams",
+      match: { deleted: true },
+    })
+    .exec((err, workspace) => {
+      if (err || !workspace) {
+        return res.status(400).json({
+          error: "Workspace not found",
+          id: wid,
+        });
+      } else {
+        return res.status(200).json({
+          teams: workspace.teams,
+        });
+      }
+    });
 };
 
 exports.restoreTeam = (req, res) => {
@@ -210,7 +232,7 @@ exports.restoreTeam = (req, res) => {
       });
     }
     if (userId == team.owner) {
-      team.hidden = false;
+      team.deleted = false;
       team.save((err, team) => {
         if (err) {
           return res.status(400).json({
@@ -338,7 +360,7 @@ exports.makeTeamLeader = (req, res) => {
             return res.status(400).json({ error: err.message });
           } else {
             // Popluate the [members] field in team.
-            team.populate(
+            updatedTeam.populate(
               "members",
               "firstname lastname username email skypeId image",
               function (err, populatedTeam) {
@@ -396,25 +418,4 @@ exports.updateTeamDetails = (req, res) => {
       });
     }
   });
-};
-exports.getHiddenTeams = (req, res) => {
-  const wid = req.query.wid;
-
-  Workspace.findOne({ _id: wid })
-    .populate({
-      path: "teams",
-      match: { hidden: true },
-    })
-    .exec((err, workspace) => {
-      if (err || !workspace) {
-        return res.status(400).json({
-          error: "Workspace not found",
-          id: wid,
-        });
-      } else {
-        return res.status(200).json({
-          teams: workspace.teams,
-        });
-      }
-    });
 };

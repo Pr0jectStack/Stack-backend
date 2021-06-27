@@ -63,12 +63,12 @@ exports.createWorkspace = (req, res) => {
   );
 };
 
-exports.hideWorkspace = (req, res) => {
+exports.deleteWorkspace = (req, res) => {
   const wid = req.body.workspaceId;
   const uid = req.body.userId;
 
   Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid == workspace.owner) {
+    if (uid === workspace.owner) {
       if (err || !workspace) {
         //Error
         return res.status(400).json({
@@ -76,7 +76,7 @@ exports.hideWorkspace = (req, res) => {
           id: wid,
         });
       } else {
-        workspace.hidden = true;
+        workspace.deleted = true;
         workspace.save((err, workspace) => {
           if (err) {
             //Error
@@ -87,7 +87,7 @@ exports.hideWorkspace = (req, res) => {
           } else {
             return res.status(200).json({
               workspace: workspace,
-              message: "Workspace is hidden successfully",
+              message: "Workspace is deleted successfully",
             });
           }
         });
@@ -100,12 +100,28 @@ exports.hideWorkspace = (req, res) => {
   });
 };
 
+exports.getDeletedWorkspaces = (req, res) => {
+  const userId = req.query.uid;
+
+  Workspace.find({ owner: userId, deleted: true }).exec((err, workspaces) => {
+    if (err || !workspaces) {
+      return res.status(400).json({
+        error: "No Workspaces not found",
+      });
+    } else {
+      return res.status(200).json({
+        workspaces: workspaces,
+      });
+    }
+  });
+};
+
 exports.restoreWorkspace = (req, res) => {
   const wid = req.body.workspaceId;
   const uid = req.body.userId;
 
   Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid == workspace.owner) {
+    if (uid === workspace.owner) {
       if (err || !workspace) {
         //Error
         return res.status(400).json({
@@ -113,7 +129,7 @@ exports.restoreWorkspace = (req, res) => {
           id: wid,
         });
       } else {
-        workspace.hidden = false;
+        workspace.deleted = false;
         workspace.save((err, workspace) => {
           if (err) {
             //Error
@@ -147,7 +163,7 @@ exports.getWorkspaceById = (req, res) => {
   Workspace.findOne({ _id: wid })
     .populate({
       path: "teams",
-      match: { hidden: false },
+      match: { deleted: false },
     })
     .populate("members", "firstname lastname username email skypeId image")
     .exec((err, workspace) => {
@@ -275,22 +291,6 @@ exports.updateWorkspaceDetails = (req, res) => {
               }
             );
         }
-      });
-    }
-  });
-};
-
-exports.getHiddenWorkspaces = (req, res) => {
-  const userId = req.query.uid;
-
-  Workspace.find({ owner: userId, hidden: true }).exec((err, workspaces) => {
-    if (err || !workspaces) {
-      return res.status(400).json({
-        error: "No Workspaces not found",
-      });
-    } else {
-      return res.status(200).json({
-        workspaces: workspaces,
       });
     }
   });

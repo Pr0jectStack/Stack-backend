@@ -28,7 +28,7 @@ const Team = new Schema(
       required: true,
     },
     tasks: [{ type: ObjectId, ref: "Task" }],
-    hidden: {
+    deleted: {
       type: Boolean,
       default: false,
     },

@@ -9,20 +9,20 @@ const {
   createWorkspace,
   getWorkspaceById,
   addMembersToWorkspace,
-  hideWorkspace,
+  deleteWorkspace,
   updateWorkspaceDetails,
   restoreWorkspace,
-  getHiddenWorkspaces,
+  getDeletedWorkspaces,
 } = require("../controllers/workspace");
 const {
   createTeam,
   addMembersToTeam,
   getTeamById,
-  hideTeam,
+  deleteTeam,
   restoreTeam,
   makeTeamLeader,
   updateTeamDetails,
-  getHiddenTeams,
+  getDeletedTeams,
 } = require("../controllers/team");
 const {
   addTask,
@@ -43,12 +43,18 @@ router.put("/updateUserImage", updateUserImage);
 
 router.post("/createWorkspace", createWorkspace);
 router.post("/addMembersToWorkspace", addMembersToWorkspace);
+router.post("/deleteWorkspace", deleteWorkspace);
+router.post("/restoreWorkspace", restoreWorkspace);
 router.get("/getWorkspaceById", getWorkspaceById);
+router.get("/getDeletedWorkspaces", getDeletedWorkspaces);
 router.put("/updateWorkspaceDetails", updateWorkspaceDetails);
 
 router.post("/createTeam", createTeam);
 router.post("/addMembersToTeam", addMembersToTeam);
+router.post("/deleteTeam", deleteTeam);
+router.post("/restoreTeam", restoreTeam);
 router.get("/getTeamById", getTeamById);
+router.get("/getDeletedTeams", getDeletedTeams);
 router.put("/makeTeamLeader", makeTeamLeader);
 router.put("/updateTeamDetails", updateTeamDetails);
 
@@ -61,13 +67,5 @@ router.post("/deleteTask", deleteTask);
 
 router.post("/addChat", addChat);
 router.get("/getChats", fetchChatMessages);
-
-router.post("/hideWorkspace", hideWorkspace);
-router.post("/hideTeam", hideTeam);
-router.post("/restoreWorkspace", restoreWorkspace);
-router.post("/restoreTeam", restoreTeam);
-
-router.get("/getHiddenTeams", getHiddenTeams);
-router.get("/getHiddenWorkspaces", getHiddenWorkspaces);
 
 module.exports = router;

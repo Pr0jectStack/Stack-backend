@@ -20,10 +20,10 @@ const Workspace = new Schema(
     },
     teams: [{ type: ObjectId, ref: "Team" }],
     members: [{ type: ObjectId, ref: "User" }],
-    hidden:{
-      type:Boolean,
-      default:false
-    }
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
