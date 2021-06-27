@@ -9,7 +9,8 @@ exports.createTeam = (req, res) => {
   const newTeam = new Team({ name, owner, inviteLink, teamLeader });
   let members = [];
   members.push(owner);
-  if (teamLeader.length > 0 && teamLeader !== owner) members.push(teamLeader);
+  if (teamLeader && teamLeader.length > 0 && teamLeader !== owner)
+    members.push(teamLeader);
   newTeam.members = members;
 
   /**
@@ -55,14 +56,16 @@ exports.createTeam = (req, res) => {
                   });
                 } else {
                   // Add team to teamLeader
-                  if (teamLeader.length > 0 && teamLeader !== owner) {
+                  if (
+                    teamLeader &&
+                    teamLeader.length > 0 &&
+                    teamLeader !== owner
+                  ) {
                     User.findOne({ _id: teamLeader }, (err, user) => {
                       if (err) {
-                        return res
-                          .status(400)
-                          .json({
-                            error: "Unexpected error while finding user",
-                          });
+                        return res.status(400).json({
+                          error: "Unexpected error while finding user",
+                        });
                       } else {
                         if (user.teams) user.teams.push(team._id);
                         else {
@@ -118,7 +121,11 @@ exports.createTeam = (req, res) => {
   });
 };
 
-
+/**
+ * Fetch team by ID.
+ * @param {String} req Query paramter - Team id
+ * @param {Response} res - Team on success
+ */
 exports.getTeamById = (req, res) => {
   const tid = req.query.tid;
   Team.findOne({ _id: tid })
@@ -129,7 +136,7 @@ exports.getTeamById = (req, res) => {
         path: "membersAssigned",
       },
     })
-    .populate("members", "firstname username email skypeId")
+    .populate("members", "firstname lastname username email skypeId image")
     .exec((err, team) => {
       if (err || !team) {
         return res.status(400).json({
@@ -159,30 +166,36 @@ exports.hideTeam = (req, res) => {
         error: "Team not found",
       });
     }
-    if( userId == team.owner){
-      team.hidden =true;
-      team.save((err,team)=>{
-        if(err){
+    if (userId == team.owner) {
+      team.hidden = true;
+      team.save((err, team) => {
+        if (err) {
           return res.status(400).json({
-            error:"Failed to hide team",
-            id:teamId
-          })
-        }else{
+            error: "Failed to hide team",
+            id: teamId,
+          });
+        } else {
           return res.status(200).json({
-            team:team,
-            message:"Team hidden successfully"
-          })
+            team: team,
+            message: "Team hidden successfully",
+          });
         }
-      })
-    }
-    else{
+      });
+    } else {
       return res.status(401).json({
-        "error":"Unauthorized"
-      })
+        error: "Unauthorized",
+      });
     }
   });
 };
 
+/**
+ * Add new members to team, iff requesting user (identified by [userId]) is owner or Team Leader,
+ * and user already is a part of the workspace.
+ *
+ * @param {object} req - Workspace Id, Team Id, members, userId
+ * @param {Response} res - Updated Team
+ */
 exports.addMembersToTeam = (req, res) => {
   const { wid, tid, members, userId } = req.body;
 
@@ -236,14 +249,69 @@ exports.addMembersToTeam = (req, res) => {
             if (err) {
               return res.status(400).json({ error: err.message });
             } else {
-              return res
-                .status(200)
-                .json({ team: team, message: "Successfully Added!" });
+              // Popluate the [members] field in team.
+              team.populate(
+                "members",
+                "firstname lastname username email skypeId image",
+                function (err, populatedTeam) {
+                  if (err) {
+                    return res.status(400).json({ error: err.message });
+                  } else {
+                    return res.status(200).json({
+                      team: populatedTeam,
+                      message: "Successfully Added!",
+                    });
+                  }
+                }
+              );
             }
           });
         }
       });
       // *****************
+    }
+  });
+};
+
+exports.makeTeamLeader = (req, res) => {
+  // TODO: Take requesting userId as input to check authorization
+  const { tid, memberId } = req.body;
+
+  Team.findOne({ _id: tid }).exec((err, team) => {
+    if (err || !team) {
+      return res.status(400).json({ error: "Team not found!" });
+    } else {
+      const { owner, teamLeader } = team;
+      if (memberId === owner || memberId === teamLeader) {
+        return res.status(400).json({
+          error: "User is not a member. Cannot change to Team Leader.",
+        });
+      } else {
+        // Change the teamLeader
+        team.teamLeader = memberId;
+
+        team.save((err, updatedTeam) => {
+          if (err) {
+            return res.status(400).json({ error: err.message });
+          } else {
+            // Popluate the [members] field in team.
+            team.populate(
+              "members",
+              "firstname lastname username email skypeId image",
+              function (err, populatedTeam) {
+                if (err) {
+                  return res.status(400).json({ error: err.message });
+                } else {
+                  return res.status(200).json({
+                    team: populatedTeam,
+                    message: "Successfully changed the Team Leader!",
+                  });
+                }
+              }
+            );
+          }
+        });
+      }
     }
   });
 };

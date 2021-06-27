@@ -9,13 +9,14 @@ const {
   createWorkspace,
   getWorkspaceById,
   addMembersToWorkspace,
-  hideWorkspace
+  hideWorkspace,
 } = require("../controllers/workspace");
 const {
   createTeam,
   addMembersToTeam,
   getTeamById,
-  hideTeam
+  hideTeam,
+  makeTeamLeader,
 } = require("../controllers/team");
 const {
   addTask,
@@ -35,12 +36,13 @@ router.put("/updateUserPassword", updateUserPassword);
 router.put("/updateUserImage", updateUserImage);
 
 router.post("/createWorkspace", createWorkspace);
-router.post("/getWorkspaceById", getWorkspaceById);
 router.post("/addMembersToWorkspace", addMembersToWorkspace);
+router.get("/getWorkspaceById", getWorkspaceById);
 
 router.post("/createTeam", createTeam);
 router.post("/addMembersToTeam", addMembersToTeam);
 router.get("/getTeamById", getTeamById);
+router.put("/makeTeamLeader", makeTeamLeader);
 
 router.post("/addTask", addTask);
 router.put("/moveTask", moveTask);
@@ -52,9 +54,7 @@ router.post("/deleteTask", deleteTask);
 router.post("/addChat", addChat);
 router.get("/getChats", fetchChatMessages);
 
-
-
-router.post("/hideWorkspace",hideWorkspace);
-router.post("/hideTeam",hideTeam);
+router.post("/hideWorkspace", hideWorkspace);
+router.post("/hideTeam", hideTeam);
 
 module.exports = router;
