@@ -13,11 +13,11 @@ exports.getUserById = (req, res) => {
     .lean()
     .populate({
       path: 'workspaces',
-      match: { hidden: false }
+      match: { deleted: false }
     })
     .populate({
       path: 'teams',
-      match: { hidden: false }
+      match: { deleted: false }
     })
     .exec((err, user) => {
       if (err) {
@@ -45,11 +45,11 @@ exports.updateUserProfile = (req, res) => {
   User.findByIdAndUpdate(userId, { bio, socialMediaHandles }, { new: true })
   .populate({
     path: 'workspaces',
-    match: { hidden: false }
+    match: { deleted: false }
   })
   .populate({
     path: 'teams',
-    match: { hidden: false }
+    match: { deleted: false }
   })
     .exec((err, data) => {
       if (err) {
@@ -102,11 +102,11 @@ exports.updateUserPassword = (req, res) => {
         // user
         // .populate({
         //   path: 'workspaces',
-        //   match: { hidden: false }
+        //   match: { deleted: false }
         // })
         // .populate({
         //   path: 'teams',
-        //   match: { hidden: false }
+        //   match: { deleted: false }
         // })
         // .exec((err,user)=>{
         //   user.encrypted_password = null;

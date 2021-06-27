@@ -6,17 +6,16 @@ const Workspace = require("../models/Workspace");
 exports.createTeam = (req, res) => {
   const { name, owner, wid, inviteLink } = req.body;
 
-  let teamLeader=null;
-  teamLeader=req.body?.teamLeader;
+  let teamLeader = null;
+  teamLeader = req.body?.teamLeader;
 
-  const newTeam = new Team({ name, owner, inviteLink});
+  const newTeam = new Team({ name, owner, inviteLink });
   let members = [];
   members.push(owner);
-  if (teamLeader && teamLeader.length > 0 && teamLeader !== owner)
-    {
-      members.push(teamLeader);
-      newTeam.teamLeader=teamLeader;
-    }
+  if (teamLeader && teamLeader.length > 0 && teamLeader !== owner) {
+    members.push(teamLeader);
+    newTeam.teamLeader = teamLeader;
+  }
   newTeam.members = members;
 
   /**
@@ -157,7 +156,7 @@ exports.getTeamById = (req, res) => {
     });
 };
 
-exports.hideTeam = (req, res) => {
+exports.deleteTeam = (req, res) => {
   const teamId = req.body.teamId;
   const userId = req.body.userId;
 
@@ -173,7 +172,7 @@ exports.hideTeam = (req, res) => {
       });
     }
     if (userId == team.owner) {
-      team.hidden = true;
+      team.deleted = true;
       team.save((err, team) => {
         if (err) {
           return res.status(400).json({
@@ -183,7 +182,7 @@ exports.hideTeam = (req, res) => {
         } else {
           return res.status(200).json({
             team: team,
-            message: "Team hidden successfully",
+            message: "Team deleted successfully",
           });
         }
       });
@@ -193,6 +192,28 @@ exports.hideTeam = (req, res) => {
       });
     }
   });
+};
+
+exports.getDeletedTeams = (req, res) => {
+  const wid = req.query.wid;
+
+  Workspace.findOne({ _id: wid })
+    .populate({
+      path: "teams",
+      match: { deleted: true },
+    })
+    .exec((err, workspace) => {
+      if (err || !workspace) {
+        return res.status(400).json({
+          error: "Workspace not found",
+          id: wid,
+        });
+      } else {
+        return res.status(200).json({
+          teams: workspace.teams,
+        });
+      }
+    });
 };
 
 exports.restoreTeam = (req, res) => {
@@ -211,7 +232,7 @@ exports.restoreTeam = (req, res) => {
       });
     }
     if (userId == team.owner) {
-      team.hidden = false;
+      team.deleted = false;
       team.save((err, team) => {
         if (err) {
           return res.status(400).json({
@@ -339,7 +360,7 @@ exports.makeTeamLeader = (req, res) => {
             return res.status(400).json({ error: err.message });
           } else {
             // Popluate the [members] field in team.
-            team.populate(
+            updatedTeam.populate(
               "members",
               "firstname lastname username email skypeId image",
               function (err, populatedTeam) {
@@ -360,24 +381,41 @@ exports.makeTeamLeader = (req, res) => {
   });
 };
 
-exports.getHiddenTeams = (req,res) => {
-    const wid = req.query.wid;
+/**
+ * Update Name for a team.
+ * @param {Object} req - Team id(tid), name
+ * @param {Response} res
+ */
+exports.updateTeamDetails = (req, res) => {
+  // TODO: Add authentication for confirming the validity of the operation
 
-    Workspace.findOne({ _id: wid })
-    .populate({
-      path: 'teams',
-      match: { hidden: true }
-    })
-    .exec((err, workspace) => {
-      if (err || !workspace) {
-        return res.status(400).json({
-          error: "Workspace not found",
-          id: wid,
-        });
-      } else {
-        return res.status(200).json({
-          teams: workspace.teams,
-        });
-      }
-    });
-}
+  const { tid, name } = req.body;
+  Team.findOne({ _id: tid }).exec((err, team) => {
+    if (err || !team) {
+      return res.status(200).json({ error: "Team not found!" });
+    } else {
+      team.name = name;
+      team.save((err, updatedTeam) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        } else {
+          // Popluate the [members] field in team.
+          updatedTeam.populate(
+            "members",
+            "firstname lastname username email skypeId image",
+            function (err, populatedTeam) {
+              if (err) {
+                return res.status(400).json({ error: err.message });
+              } else {
+                return res.status(200).json({
+                  team: populatedTeam,
+                  message: "Successfully updated team!",
+                });
+              }
+            }
+          );
+        }
+      });
+    }
+  });
+};

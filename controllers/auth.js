@@ -53,9 +53,9 @@ exports.signin = (req, res) => {
   })
     .populate({
       path: 'workspaces',
-      match: { hidden: false }
+      match: { deleted: false }
     })
-    // .populate("workspaces",{hidden:false})
+    // .populate("workspaces",{deleted:false})
     .populate("teams")
     .exec((err, user) => {
       if (err || !user) {

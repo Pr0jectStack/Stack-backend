@@ -63,12 +63,12 @@ exports.createWorkspace = (req, res) => {
   );
 };
 
-exports.hideWorkspace = (req, res) => {
+exports.deleteWorkspace = (req, res) => {
   const wid = req.body.workspaceId;
   const uid = req.body.userId;
 
   Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid == workspace.owner) {
+    if (uid === workspace.owner) {
       if (err || !workspace) {
         //Error
         return res.status(400).json({
@@ -76,7 +76,7 @@ exports.hideWorkspace = (req, res) => {
           id: wid,
         });
       } else {
-        workspace.hidden = true;
+        workspace.deleted = true;
         workspace.save((err, workspace) => {
           if (err) {
             //Error
@@ -87,7 +87,7 @@ exports.hideWorkspace = (req, res) => {
           } else {
             return res.status(200).json({
               workspace: workspace,
-              message: "Workspace is hidden successfully",
+              message: "Workspace is deleted successfully",
             });
           }
         });
@@ -100,13 +100,28 @@ exports.hideWorkspace = (req, res) => {
   });
 };
 
+exports.getDeletedWorkspaces = (req, res) => {
+  const userId = req.query.uid;
+
+  Workspace.find({ owner: userId, deleted: true }).exec((err, workspaces) => {
+    if (err || !workspaces) {
+      return res.status(400).json({
+        error: "No Workspaces not found",
+      });
+    } else {
+      return res.status(200).json({
+        workspaces: workspaces,
+      });
+    }
+  });
+};
 
 exports.restoreWorkspace = (req, res) => {
   const wid = req.body.workspaceId;
   const uid = req.body.userId;
 
   Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
-    if (uid == workspace.owner) {
+    if (uid === workspace.owner) {
       if (err || !workspace) {
         //Error
         return res.status(400).json({
@@ -114,7 +129,7 @@ exports.restoreWorkspace = (req, res) => {
           id: wid,
         });
       } else {
-        workspace.hidden = false;
+        workspace.deleted = false;
         workspace.save((err, workspace) => {
           if (err) {
             //Error
@@ -138,7 +153,6 @@ exports.restoreWorkspace = (req, res) => {
   });
 };
 
-
 /**
  * Fetch workspace by ID.
  * @param {String} req - Query paramter: Workspace ID
@@ -148,8 +162,8 @@ exports.getWorkspaceById = (req, res) => {
   const wid = req.query.wid;
   Workspace.findOne({ _id: wid })
     .populate({
-      path: 'teams',
-      match: { hidden: false }
+      path: "teams",
+      match: { deleted: false },
     })
     .populate("members", "firstname lastname username email skypeId image")
     .exec((err, workspace) => {
@@ -241,20 +255,43 @@ exports.addMembersToWorkspace = (req, res) => {
   });
 };
 
+/**
+ * Update Name and Description for a Workspace.
+ * @param {Object} req - Workspace id(wid), name, description
+ * @param {Response} res
+ */
+exports.updateWorkspaceDetails = (req, res) => {
+  // TODO: Add authentication for confirming the validity of the operation
 
-exports.getHiddenWorkspaces = (req,res) => {
-  const userId =req.query.uid;
-
-  Workspace.find({ owner: userId, hidden:true })
-  .exec((err, workspaces) => {
-    if (err || !workspaces) {
-      return res.status(400).json({
-        error: "No Workspaces not found",
-      });
+  const { wid, name, description } = req.body;
+  Workspace.findOne({ _id: wid }).exec((err, workspace) => {
+    if (err || !workspace) {
+      return res.status(400).json({ error: "Workspace not found!" });
     } else {
-      return res.status(200).json({
-        workspaces: workspaces,
+      workspace.name = name;
+      workspace.description = description;
+      workspace.save((err, udpateWorksapce) => {
+        if (err) {
+          return res.status(400).json({ error: err.message });
+        } else {
+          // Populate the [members] and [teams] field in workspace.
+          updatedWorkspace
+            .populate("teams")
+            .populate(
+              "members",
+              "firstname lastname username email skypeId image",
+              function (err, populatedWorkspace) {
+                if (err) {
+                  return res.status(400).json({ error: err });
+                }
+                return res.status(200).json({
+                  workspace: populatedWorkspace,
+                  message: "Successfully Updated workspace!",
+                });
+              }
+            );
+        }
       });
     }
   });
-}
+};
