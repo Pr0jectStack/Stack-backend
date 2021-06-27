@@ -359,3 +359,25 @@ exports.makeTeamLeader = (req, res) => {
     }
   });
 };
+
+exports.getHiddenTeams = (req,res) => {
+    const wid = req.query.wid;
+
+    Workspace.findOne({ _id: wid })
+    .populate({
+      path: 'teams',
+      match: { hidden: true }
+    })
+    .exec((err, workspace) => {
+      if (err || !workspace) {
+        return res.status(400).json({
+          error: "Workspace not found",
+          id: wid,
+        });
+      } else {
+        return res.status(200).json({
+          teams: workspace.teams,
+        });
+      }
+    });
+}

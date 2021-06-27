@@ -242,3 +242,19 @@ exports.addMembersToWorkspace = (req, res) => {
 };
 
 
+exports.getHiddenWorkspaces = (req,res) => {
+  const userId =req.query.uid;
+
+  Workspace.find({ owner: userId, hidden:true })
+  .exec((err, workspaces) => {
+    if (err || !workspaces) {
+      return res.status(400).json({
+        error: "No Workspaces not found",
+      });
+    } else {
+      return res.status(200).json({
+        workspaces: workspaces,
+      });
+    }
+  });
+}
