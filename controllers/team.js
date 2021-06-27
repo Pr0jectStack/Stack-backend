@@ -157,10 +157,9 @@ exports.getTeamById = (req, res) => {
 };
 
 exports.deleteTeam = (req, res) => {
-  const teamId = req.body.teamId;
-  const userId = req.body.userId;
+  const { tid, userId } = req.body;
 
-  Team.findOne({ _id: teamId }, (err, team) => {
+  Team.findOne({ _id: tid }, (err, team) => {
     if (err) {
       return res.status(400).json({
         error: "Unexpected error",
@@ -171,13 +170,13 @@ exports.deleteTeam = (req, res) => {
         error: "Team not found",
       });
     }
-    if (userId == team.owner) {
+    if (userId == team.owner.toString()) {
       team.deleted = true;
       team.save((err, team) => {
         if (err) {
           return res.status(400).json({
             error: "Failed to hide team",
-            id: teamId,
+            id: tid,
           });
         } else {
           return res.status(200).json({
@@ -217,10 +216,9 @@ exports.getDeletedTeams = (req, res) => {
 };
 
 exports.restoreTeam = (req, res) => {
-  const teamId = req.body.teamId;
-  const userId = req.body.userId;
+  const { tid, userId } = req.body;
 
-  Team.findOne({ _id: teamId }, (err, team) => {
+  Team.findOne({ _id: tid }, (err, team) => {
     if (err) {
       return res.status(400).json({
         error: "Unexpected error",
@@ -237,7 +235,7 @@ exports.restoreTeam = (req, res) => {
         if (err) {
           return res.status(400).json({
             error: "Failed to restore team",
-            id: teamId,
+            id: tid,
           });
         } else {
           return res.status(200).json({
