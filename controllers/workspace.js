@@ -65,7 +65,6 @@ exports.createWorkspace = (req, res) => {
 
 exports.deleteWorkspace = (req, res) => {
   const { wid, userId } = req.body;
-  console.log(userId);
 
   Workspace.findOne({ _id: wid }).exec((err, workspace) => {
     if (err || !workspace) {
