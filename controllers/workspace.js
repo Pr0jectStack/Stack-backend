@@ -100,6 +100,45 @@ exports.hideWorkspace = (req, res) => {
   });
 };
 
+
+exports.restoreWorkspace = (req, res) => {
+  const wid = req.body.workspaceId;
+  const uid = req.body.userId;
+
+  Workspace.findOne({ _id: wid }).exec(async (err, workspace) => {
+    if (uid == workspace.owner) {
+      if (err || !workspace) {
+        //Error
+        return res.status(400).json({
+          error: "Failed to find workspace",
+          id: wid,
+        });
+      } else {
+        workspace.hidden = false;
+        workspace.save((err, workspace) => {
+          if (err) {
+            //Error
+            return res.status(400).json({
+              error: "Failed to restore workspace",
+              id: wid,
+            });
+          } else {
+            return res.status(200).json({
+              workspace: workspace,
+              message: "Workspace has been restored successfully",
+            });
+          }
+        });
+      }
+    } else {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+  });
+};
+
+
 /**
  * Fetch workspace by ID.
  * @param {String} req - Query paramter: Workspace ID
@@ -201,3 +240,5 @@ exports.addMembersToWorkspace = (req, res) => {
     }
   });
 };
+
+

@@ -195,6 +195,44 @@ exports.hideTeam = (req, res) => {
   });
 };
 
+exports.restoreTeam = (req, res) => {
+  const teamId = req.body.teamId;
+  const userId = req.body.userId;
+
+  Team.findOne({ _id: teamId }, (err, team) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Unexpected error",
+      });
+    }
+    if (!team) {
+      return res.status(404).json({
+        error: "Team not found",
+      });
+    }
+    if (userId == team.owner) {
+      team.hidden = false;
+      team.save((err, team) => {
+        if (err) {
+          return res.status(400).json({
+            error: "Failed to restore team",
+            id: teamId,
+          });
+        } else {
+          return res.status(200).json({
+            team: team,
+            message: "Team has been restored successfully",
+          });
+        }
+      });
+    } else {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+  });
+};
+
 /**
  * Add new members to team, iff requesting user (identified by [userId]) is owner or Team Leader,
  * and user already is a part of the workspace.
