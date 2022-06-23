@@ -155,7 +155,7 @@ exports.signup = (req, res) => {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     const msg = {
       to: email, // Change to your recipient
-      from: "collabb.org@gmail.com", // Change to your verified sender
+      from: "poolify.org@gmail.com", // Change to your verified sender
       subject: "Collab: Account Activation Link",
       html: `
             <h2>Activate your account</h2>
@@ -304,7 +304,7 @@ exports.forgotPassword = (req, res) => {
 
     const msg = {
       to: email, // Change to your recipient
-      from: "collabb.org@gmail.com", // Change to your verified sender
+      from: "poolify.org@gmail.com", // Change to your verified sender
       subject: "Collab: Password Reset Link",
       html: `
             <h2>Reset your password</h2>
